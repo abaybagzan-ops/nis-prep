@@ -10,8 +10,8 @@
   var pools = function () {
     if (POOLS) return POOLS;
     POOLS = {
-      math: NP.TPL.filter(function (t) { return t.s === 'math' && LOGIC_T.indexOf(t.t) < 0; }),
-      logic: NP.TPL.filter(function (t) { return t.s === 'qc' || (t.s === 'math' && LOGIC_T.indexOf(t.t) >= 0); }),
+      math: NP.TPL.filter(function (t) { return t.s === 'math' && LOGIC_T.indexOf(t.t) < 0 && t.pool !== 'logic'; }),
+      logic: NP.TPL.filter(function (t) { return t.s === 'qc' || (t.s === 'math' && (LOGIC_T.indexOf(t.t) >= 0 || t.pool === 'logic')); }),
       en: NP.TPL.filter(function (t) { return t.t === 'enmini'; }),
       sci: NP.TPL.filter(function (t) { return t.s === 'sci'; }),
       kk: NP.TPL.filter(function (t) { return t.t === 'kkmini'; }),
@@ -24,6 +24,7 @@
 
   /* Оценка времени (сек) на задание вместе с чтением разбора */
   NP.estSec = function (t) {
+    if (t.est) return t.est + 12;
     var base;
     if (t.s === 'math') base = LOGIC_T.indexOf(t.t) >= 0 ? [0, 50, 80, 100][t.d] : [0, 40, 70, 95][t.d];
     else if (t.s === 'qc') base = [0, 30, 40, 55][t.d];
@@ -93,7 +94,7 @@
     used.ids[best.id] = 1; used.topics[best.t] = 1; used.skills[best.k] = 1;
     return best;
   };
-  var item = function (t, r, ri, slot) { return { id: t.id, seed: isStatic(t) ? 1 : r.int(1, 2e9), s: t.s, r: ri, slot: slot }; };
+  var item = function (t, r, ri, slot) { return { id: t.id, seed: r.int(1, 2e9), s: t.s, r: ri, slot: slot }; };
   var nm = function (o, lg) { return o[lg]; };
   var tName = function (t) { return NP.TOPICS[t] ? NP.TOPICS[t].name : L(t, t); };
 

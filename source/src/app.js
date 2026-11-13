@@ -8,6 +8,7 @@
     checked: '11.11.2026',
     links: [
       { url: 'https://www.nis.edu.kz/ru/page/konkurs-zoninde-xabarlama', t: L('NIS: конкурс туралы хабарландыру (2027–2028 оқу жылы)', 'NIS: объявление о конкурсе (2027–2028 учебный год)') },
+      { url: 'https://www.nis.edu.kz/kk/page/konkurstyq-irikteu-tapsyrmalarynyn-ulgileri', t: L('NIS: конкурстық іріктеу тапсырмаларының үлгілері (1–2-күндер)', 'NIS: образцы заданий конкурсного отбора (1–2-й дни)') },
       { url: 'https://www.nis.edu.kz/storage/files/01KEVNJY08HWTNGNR57EQFMKCF.pdf', t: L('NIS ПӨО: үміткерлерге арналған ақпараттық буклет (2026–2027 оқу жылы, PDF)', 'ЦПИ NIS: информационный буклет для претендентов (2026–2027 учебный год, PDF)') }
     ]
   };
@@ -727,7 +728,7 @@
         }
         if (!pick) { flash = t(L('Бұл тақырыпта жаңа ұқсас тапсырма қалмады.', 'В этой теме больше нет новых похожих заданий.')); render(); return true; }
         it.simAdded = true;
-        ses.items.splice(ses.cur + 1, 0, { id: pick.id, seed: stat ? 1 : Math.floor(Math.random() * 2e9) + 1, s: pick.s, r: it.r, slot: 'similar', sel: null, done: false, hint: false, mid: null });
+        ses.items.splice(ses.cur + 1, 0, { id: pick.id, seed: Math.floor(Math.random() * 2e9) + 1, s: pick.s, r: it.r, slot: 'similar', sel: null, done: false, hint: false, mid: null });
         ses.cur++; flash = null; save(); render(); window.scrollTo(0, 0); return true;
       case 'd-next':
         if (!it.done) return true;
@@ -801,7 +802,7 @@
         var stat = ['sci', 'kk', 'ru', 'en'].indexOf(base.s) >= 0;
         var pick = stat ? sameT.filter(function (x) { return !ses.items.some(function (y) { return y.id === x.id; }); })[0] : base;
         if (!pick) { flash = t(L('Бұл тақырыпта жаңа ұқсас тапсырма қалмады. Басқа тақырыпты таңдаңыз.', 'В этой теме больше нет новых похожих заданий. Выберите другую тему.')); render(); break; }
-        ses.items.push({ id: pick.id, seed: stat ? 1 : Math.floor(Math.random() * 2e9) + 1, sec: 'all', s: pick.s });
+        ses.items.push({ id: pick.id, seed: Math.floor(Math.random() * 2e9) + 1, sec: 'all', s: pick.s });
         ses.sections[0].to = ses.items.length - 1; ses.cur = ses.items.length - 1; flash = null; save(); render(); break;
       case 'end-sec':
         if (!ses) break; ask(esc(t(L('Бөлім аяқталады және оған қайта оралып, жауапты өзгертуге болмайды. Жалғастыру керек пе?', 'Раздел будет завершён, вернуться и изменить ответы в нём будет нельзя. Продолжить?'))), t(L('Бөлімді аяқтау', 'Завершить раздел')), function () {

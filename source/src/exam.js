@@ -31,7 +31,7 @@
       var s = r.shuffle(pool('sci')).slice(0, 20);
       [[m, 'math'], [q, 'qc'], [s, 'sci']].forEach(function (p) { p[0].forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: p[1], s: t.s }); }); });
     } else {
-      ['kk', 'ru', 'en'].forEach(function (lg) { pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { items.push({ id: t.id, seed: 1, sec: 'lang', s: t.s }); }); });
+      ['kk', 'ru', 'en'].forEach(function (lg) { pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'lang', s: t.s }); }); });
     }
     var title = day === 1 ? L('Толық сынақ: 1-күн', 'Полный тест: 1-й день') : L('Толық сынақ: 2-күн', 'Полный тест: 2-й день');
     return base('exam' + day, 'day' + day, title, mode, items, mkSections(NP.FORMAT[day]), { day: day, timed: mode === 'exam' });
@@ -45,7 +45,7 @@
       ['kk', 'ru', 'en'].forEach(function (lg) {
         var ps = {}; pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { (ps[t.pass] = ps[t.pass] || []).push(t); });
         var keys = Object.keys(ps), pk = keys[r.int(0, keys.length - 1)];
-        ps[pk].forEach(function (t) { items.push({ id: t.id, seed: 1, sec: 'all', s: t.s }); });
+        ps[pk].forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'all', s: t.s }); });
       });
     } else {
       NP.TOPIC_ORDER.filter(function (tp) { return NP.TOPICS[tp].s === sub; }).forEach(function (tp) {
@@ -73,10 +73,10 @@
     while (order.length < n) order = order.concat(r.shuffle(ts));
     order.slice(0, n).forEach(function (t) {
       var stat = t.g.length === 0 || t.s === 'sci' || t.s === 'kk' || t.s === 'ru' || t.s === 'en';
-      items.push({ id: t.id, seed: stat ? 1 : r.int(1, 2e9), sec: 'all', s: t.s });
+      items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'all', s: t.s, stat: stat });
     });
     // убрать полностью одинаковые задания (статичные шаблоны)
-    var seen = {}; items = items.filter(function (it) { var k = it.id + ':' + it.seed; if (seen[k]) return false; seen[k] = 1; return true; });
+    var seen = {}; items = items.filter(function (it) { var k = it.stat ? it.id : it.id + ':' + it.seed; if (seen[k]) return false; seen[k] = 1; return true; });
     return base('practice', filter.topic || filter.skill || filter.id, title, 'study', items, mkSections([{ key: 'all', n: items.length }]));
   };
 

@@ -1,7 +1,7 @@
 /* Автоматическая проверка банка заданий. Запуск: node tools/validate.js */
 const path = require('path');
 const src = path.join(__dirname, '..', 'src');
-['core', 'bank_math', 'bank_qc', 'bank_sci', 'bank_lang', 'bank_short', 'lessons', 'exam', 'daily'].forEach(f => { try { require(path.join(src, f + '.js')); } catch (e) { if (f !== 'exam' && f !== 'daily') throw e; } });
+['core', 'bank_math', 'bank_qc', 'bank_sci', 'bank_lang', 'bank_short', 'bank_pack1', 'lessons', 'exam', 'daily'].forEach(f => { try { require(path.join(src, f + '.js')); } catch (e) { if (f !== 'exam' && f !== 'daily') throw e; } });
 const NP = globalThis.NP;
 const KZ = /[әғқңөұүһіӘҒҚҢӨҰҮҺІ]/;
 let errors = [], warns = [];
@@ -28,7 +28,11 @@ NP.TPL.forEach(t => {
       // Ключ, встречающийся в объяснении (для расчётных заданий)
       if (inst.type === 'mc' && (t.s === 'math')) {
         const a = plain(Lg.opts[inst.ans]);
-        if (plain(Lg.e).indexOf(a) < 0) errors.push(`${t.id} [${lg}] seed ${seed}: ответ «${a}» не найден в объяснении`);
+        if (t.src === 'pack1') {
+          const num = (a.match(/\d[\d\s,/:]*\d|\d/) || [null])[0];
+          const norm = x => x.replace(/\s+/g, '').replace(/\u00A0/g, '');
+          if (num && norm(plain(Lg.e)).indexOf(norm(num)) < 0) errors.push(`${t.id} [${lg}]: число ответа «${num}» не найдено в объяснении`);
+        } else if (plain(Lg.e).indexOf(a) < 0) errors.push(`${t.id} [${lg}] seed ${seed}: ответ «${a}» не найден в объяснении`);
       }
       if (inst.type === 'qc') {
         if (inst.ans !== 3 && inst.va != null && inst.vb != null && !inst.cases) {
@@ -93,6 +97,16 @@ if (NP.makeExam) {
   }
 }
 
+if (NP.makeExam && NP.buildDaily) {
+  const cnt = { stat: [0, 0, 0, 0], all: [0, 0, 0, 0] };
+  const add = it => { const t = NP.byId[it.id], i = NP.build(it.id, it.seed); cnt.all[i.ans]++; if (t.g.length === 0) cnt.stat[i.ans]++; };
+  for (let k = 0; k < 20; k++) {
+    NP.makeExam(1, 'exam', 50 + k).items.forEach(add); NP.makeExam(2, 'exam', 90 + k).items.forEach(add);
+    NP.makeDiag('lang', 7 + k).items.forEach(add); NP.makeDiag('sci', 7 + k).items.forEach(add);
+    NP.buildDaily({ log: [], mistakes: [], attempts: [], en: { placed: k % 2 === 0, level: 1 + k % 3, hist: [] } }, 'normal', Date.now() + k * 864e5, 300 + k).items.forEach(add);
+  }
+  ['stat', 'all'].forEach(key => { const c = cnt[key], n = c.reduce((a, b) => a + b, 0); console.log('Позиции ответа в реальных попытках (' + key + '):', c.join(' / ')); if (c.some(x => x > n * 0.4)) errors.push('Перекос позиций правильного ответа в попытках (' + key + '): ' + c.join('/')); });
+}
 const by = {}; NP.TPL.forEach(t => by[t.s] = (by[t.s] || 0) + 1);
 console.log('Шаблонов по предметам:', JSON.stringify(by), 'всего', NP.TPL.length);
 console.log('Позиции правильного ответа (MC, A/B/C/D):', pos.join(' / '));

@@ -1,7 +1,7 @@
 /* Сборка: dist/artifact.html (для публикации, без каркаса) и dist/nis-prep.html (автономный файл) */
 const fs = require('fs'), path = require('path');
 const R = f => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8');
-const js = ['core.js', 'bank_math.js', 'bank_qc.js', 'bank_sci.js', 'bank_lang.js', 'bank_short.js', 'lessons.js', 'exam.js', 'daily.js', 'app.js'].map(R).join('\n;\n').replace(/<\/script/gi, '<\\/script');
+const js = ['core.js', 'bank_math.js', 'bank_qc.js', 'bank_sci.js', 'bank_lang.js', 'bank_short.js', 'bank_pack1.js', 'lessons.js', 'exam.js', 'daily.js', 'app.js'].map(R).join('\n;\n').replace(/<\/script/gi, '<\\/script');
 const head = `<title>NIS Дайындық</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="NIS-ке түсуге дайындық: математика, сандық сипаттамалар, жаратылыстану, тілдер.">
