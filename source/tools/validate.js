@@ -1,7 +1,7 @@
 /* Автоматическая проверка банка заданий. Запуск: node tools/validate.js */
 const path = require('path');
 const src = path.join(__dirname, '..', 'src');
-['core', 'bank_math', 'bank_qc', 'bank_sci', 'bank_lang', 'lessons', 'exam'].forEach(f => { try { require(path.join(src, f + '.js')); } catch (e) { if (f !== 'exam') throw e; } });
+['core', 'bank_math', 'bank_qc', 'bank_sci', 'bank_lang', 'bank_short', 'lessons', 'exam', 'daily'].forEach(f => { try { require(path.join(src, f + '.js')); } catch (e) { if (f !== 'exam' && f !== 'daily') throw e; } });
 const NP = globalThis.NP;
 const KZ = /[әғқңөұүһіӘҒҚҢӨҰҮҺІ]/;
 let errors = [], warns = [];

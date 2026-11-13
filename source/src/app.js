@@ -15,7 +15,7 @@
   /* ---------------- Тексты интерфейса ---------------- */
   var TX = {
     brand: L('NIS-ке дайындық', 'Подготовка к NIS'),
-    home: L('Оқу панелі', 'Главная'), learn: L('Үйрену', 'Учиться'), diag: L('Диагностика', 'Диагностика'), exam: L('Толық сынақ', 'Полный тест'),
+    home: L('Оқу панелі', 'Главная'), daily: L('Күнделікті раунд', 'Тренировка дня'), learn: L('Үйрену', 'Учиться'), diag: L('Диагностика', 'Диагностика'), exam: L('Толық сынақ', 'Полный тест'),
     results: L('Нәтижелер', 'Результаты'), mistakes: L('Қателерді қайталау', 'Работа над ошибками'), plan: L('Апталық жоспар', 'Недельный план'), data: L('Деректер', 'Данные'),
     uiLang: L('Интерфейс', 'Интерфейс'), qLang: L('Тапсырма тілі', 'Язык заданий'),
     local: L('Прогресс тек осы құрылғының браузерінде сақталады. Басқа құрылғыда ол автоматты түрде көрінбейді — сақтық көшірме жасап тұрыңыз.', 'Прогресс хранится только в браузере этого устройства. На другом устройстве он автоматически не появится — периодически делайте резервную копию.'),
@@ -43,7 +43,7 @@
 
   /* ---------------- Хранилище ---------------- */
   var storageOk = true;
-  var fresh = function () { return { v: VERSION, app: 'nis-prep', ui: 'kk', ql: 'kk', created: Date.now(), sessions: { full: null, test: null, practice: null }, attempts: [], log: [], mistakes: [], plan: null, seen: {} }; };
+  var fresh = function () { return { v: VERSION, app: 'nis-prep', ui: 'kk', ql: 'kk', created: Date.now(), sessions: { full: null, test: null, practice: null, daily: null }, en: { placed: false, level: 1, hist: [], ups: 0, downs: 0 }, attempts: [], log: [], mistakes: [], plan: null, seen: {} }; };
   var load = function () {
     try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); if (s && s.v === VERSION) return s; } } catch (e) { storageOk = false; }
     return fresh();
@@ -51,6 +51,8 @@
   var save = function () { try { localStorage.setItem(KEY, JSON.stringify(S)); storageOk = true; } catch (e) { storageOk = false; } };
   S = load();
   if (!S.sessions) S.sessions = { full: null, test: null, practice: null };
+  if (S.sessions.daily === undefined) S.sessions.daily = null;
+  if (!S.en) S.en = { placed: false, level: 1, hist: [], ups: 0, downs: 0 };
 
   /* ---------------- Статистика ---------------- */
   var skillKey = function (s, k) { return s + ':' + k; };
@@ -69,7 +71,8 @@
   var snap = function (inst) { return { kk: { stem: inst.L.kk.stem, opts: inst.L.kk.opts, e: inst.L.kk.e, whys: inst.L.kk.whys }, ru: { stem: inst.L.ru.stem, opts: inst.L.ru.opts, e: inst.L.ru.e, whys: inst.L.ru.whys } }; };
   var record = function (it, inst, sel, src, title) {
     var ok = sel !== null && sel !== undefined && sel === inst.ans, now = Date.now();
-    S.log.push({ ts: now, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, ok: ok, src: src });
+    S.log.push({ ts: now, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, d: inst.d, ok: ok, src: src });
+    record.lastMid = null;
     var key = skillKey(inst.s, inst.k);
     S.mistakes.forEach(function (m) {
       if (m.status === 'fixed' || skillKey(m.s, m.k) !== key) return;
@@ -83,7 +86,8 @@
       } else if (m.status === 'later') { m.status = 'work'; m.checks = []; m.due = null; }
     });
     if (!ok) {
-      S.mistakes.unshift({ mid: NP.uid(), ts: now, test: title, src: src, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, sel: sel === undefined ? null : sel, ans: inst.ans, snap: snap(inst), reason: null, next: null, status: 'new', checks: [], due: null });
+      record.lastMid = NP.uid();
+      S.mistakes.unshift({ mid: record.lastMid, ts: now, test: title, src: src, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, sel: sel === undefined ? null : sel, ans: inst.ans, snap: snap(inst), reason: null, next: null, status: 'new', checks: [], due: null });
     }
     return ok;
   };
@@ -98,7 +102,7 @@
   var ask = function (text, yes, onYes) { modal = { text: text, yes: yes, onYes: onYes }; render(); };
 
   /* ---------------- Каркас ---------------- */
-  var NAV = ['home', 'learn', 'diag', 'exam', 'results', 'mistakes', 'plan'];
+  var NAV = ['home', 'daily', 'learn', 'mistakes', 'results', 'diag', 'exam', 'plan'];
   var shell = function (main) {
     var r = route().split('-')[0];
     var nav = NAV.map(function (k) { return '<a href="#' + k + '" class="nav-i' + (r === k || (k === 'exam' && r === 'run' && false) ? ' on' : '') + '"' + (r === k ? ' aria-current="page"' : '') + '>' + esc(t(TX[k])) + '</a>'; }).join('');
@@ -124,10 +128,11 @@
   };
   var viewHome = function () {
     var act = activeList(), h = h1(esc(t(L('Сәлем! Бүгін немен айналысамыз?', 'Привет! Чем займёмся сегодня?'))), esc(t(L('Математика мен сандық сипаттамаларға басымдық беріледі. Әр нәтиже тек сіздің шын жауаптарыңызға негізделеді.', 'Главный упор — на математику и количественные характеристики. Все выводы строятся только на ваших реальных ответах.'))));
+    h += dailyCard();
     if (act.length) h += card('<h2>' + esc(t(L('Аяқталмаған жұмыс', 'Незавершённая работа'))) + '</h2><div class="list">' + act.map(function (a) { var ans = Object.keys(a.s.answers).length; return '<div class="li"><div><b>' + esc(t(a.s.title)) + '</b><div class="muted">' + ans + ' / ' + a.s.items.length + '</div></div><button class="btn pri" data-act="open-run" data-v="' + a.slot + '">' + esc(t(TX.resume)) + '</button></div>'; }).join('') + '</div>');
     if (!S.attempts.length && !S.log.length) {
-      h += card('<h2>' + esc(t(L('Әлі нәтиже жоқ', 'Пока нет результатов'))) + '</h2><p>' + esc(t(L('Бастапқы диагностикадан бастаңыз: ол әр бағыт бойынша қай дағдылар жақсы, қайсысын қайталау керек екенін көрсетеді. Оған дейін платформа ешқандай баға немесе «күшті тақырып» көрсетпейді.', 'Начните с исходной диагностики: она покажет, какие навыки в порядке, а какие нужно повторить. До неё платформа не показывает никаких оценок и «сильных тем».'))) + '</p><div class="row wrap-row">' +
-        ['math', 'qc', 'sci', 'lang'].map(function (s) { return '<button class="btn ' + (s === 'math' || s === 'qc' ? 'pri' : '') + '" data-act="diag" data-v="' + s + '">' + esc(s === 'lang' ? t(L('Тілдер', 'Языки')) : t(NP.SUBJ[s])) + '</button>'; }).join('') + '</div>', 'hero') + subjCards();
+      h += card('<h2>' + esc(t(L('Әлі нәтиже жоқ', 'Пока нет результатов'))) + '</h2><p>' + esc(t(L('Күнделікті раундтан бастаңыз. Толығырақ тексеріс керек болса — бағыт бойынша диагностика. Оған дейін платформа ешқандай баға немесе «күшті тақырып» көрсетпейді.', 'Начните с тренировки дня. Если нужна подробная проверка — диагностика по направлению. До этого платформа не показывает никаких оценок и «сильных тем».'))) + '</p><div class="row wrap-row">' +
+        ['math', 'qc', 'sci', 'lang'].map(function (s) { return '<button class="btn' + '" data-act="diag" data-v="' + s + '">' + esc(t(TX.diag)) + ': ' + esc(s === 'lang' ? t(L('Тілдер', 'Языки')) : t(NP.SUBJ[s])) + '</button>'; }).join('') + '</div>') + subjCards();
     } else {
       var last = S.attempts[0], st = stats(), open = S.mistakes.filter(function (m) { return m.status !== 'fixed'; }).length;
       var due = S.mistakes.filter(function (m) { return m.status === 'later' && m.due && m.due <= Date.now(); }).length;
@@ -400,12 +405,14 @@
     var h = h1(esc(t(TX.results)), esc(t(L('Тек сіздің нақты жауаптарыңыз негізінде. Салыстыру тек бірдей форматтағы әрекеттер арасында жасалады.', 'Только по вашим реальным ответам. Сравниваются только попытки одного формата.'))));
     if (!S.attempts.length && !S.log.length) return h + card('<h2>' + esc(t(L('Әлі нәтиже жоқ', 'Пока нет результатов'))) + '</h2><p>' + esc(t(L('Диагностикадан бастаңыз — сонда осы жерде нәтижелер мен динамика пайда болады.', 'Начните с диагностики — тогда здесь появятся результаты и динамика.'))) + '</p><a class="btn pri" href="#diag">' + esc(t(TX.diag)) + '</a>', 'hero');
     h += '<p class="note">' + esc(t(TX.disclaim)) + '</p>';
+    var dst = NP.dailyStats(S, Date.now());
+    h += card('<h2>' + esc(t(L('Күнделікті раундтар және English', 'Тренировки дня и English'))) + '</h2>' + streakLine(dst) + '<p>English: ' + (S.en && S.en.placed ? esc(t(L('деңгей ' + S.en.level + ' (шамамен ' + NP.CEFR[S.en.level] + '), деңгей көтерілді: ' + (S.en.ups || 0) + ' рет', 'уровень ' + S.en.level + ' (примерно ' + NP.CEFR[S.en.level] + '), повышений: ' + (S.en.ups || 0)))) : esc(t(L('деңгей әлі анықталмаған', 'уровень ещё не определён')))) + '</p><p class="muted sm">' + esc(t(L('Меңгерілген дағдылар (кемінде 6 жауап, 80%-дан жоғары): ', 'Освоенные навыки (не меньше 6 ответов, выше 80%): '))) + dst.mastered + '</p>' + badgesHtml(dst));
     /* попытки */
     if (S.attempts.length) h += card('<h2>' + esc(t(L('Әрекеттер', 'Попытки'))) + '</h2>' + NP.table([esc(t(TX.date)), esc(t(TX.test)), esc(t(L('Бөлімдер', 'Разделы'))), esc(t(L('Барлығы', 'Всего'))), ''], S.attempts.map(function (a) {
       return [fmtDate(a.ts), esc(kindName(a)) + (a.mode === 'study' ? ' <span class="muted sm">(' + esc(t(L('оқу', 'учебный'))) + ')</span>' : ''), a.sections.map(function (s) { return (a.sections.length > 1 ? esc(t(NP.SEC_NAME[s.key])) + ': ' : '') + s.c + '/' + s.n; }).join('<br>'), a.c + '/' + a.n + ' (' + pct(a.c, a.n) + ')', '<a href="#attempt-' + a.aid + '">' + esc(t(L('Талдау', 'Разбор'))) + '</a>'];
     })));
     /* динамика по сопоставимым попыткам */
-    var groups = {}; S.attempts.forEach(function (a) { if (a.kind === 'practice') return; var g = a.kind + '|' + a.sub + '|' + a.mode; (groups[g] = groups[g] || []).push(a); });
+    var groups = {}; S.attempts.forEach(function (a) { if (a.kind === 'practice' || a.kind === 'daily') return; var g = a.kind + '|' + a.sub + '|' + a.mode; (groups[g] = groups[g] || []).push(a); });
     var dyn = Object.keys(groups).filter(function (g) { return groups[g].length >= 2; }).map(function (g) {
       var arr = groups[g], last = arr[0], first = arr[arr.length - 1];
       var tp = function (a) { var m = {}; a.items.forEach(function (x) { (m[x.t] = m[x.t] || { n: 0, c: 0 }); m[x.t].n++; if (x.ok) m[x.t].c++; }); return m; };
@@ -552,8 +559,183 @@
     if (!ok) return bad(t(L('Көшірмедегі жазбалардың бір бөлігі бүлінген. Импорт тоқтатылды, ағымдағы деректер өзгерген жоқ.', 'Часть записей в копии повреждена. Импорт остановлен, текущие данные не изменены.')));
     ask(esc(t(L('Ағымдағы деректер көшірмедегі деректермен ауыстырылады: ', 'Текущие данные будут заменены данными из копии: '))) + d.log.length + ' ' + esc(t(L('жауап', 'ответов'))) + ', ' + d.attempts.length + ' ' + esc(t(L('әрекет', 'попыток'))) + '.', t(L('Иә, қалпына келтіру', 'Да, восстановить')), function () {
       d.v = VERSION; if (!d.sessions) d.sessions = { full: null, test: null, practice: null }; if (!d.seen) d.seen = {};
+      if (d.sessions.daily === undefined) d.sessions.daily = null; if (!d.en) d.en = { placed: false, level: 1, hist: [], ups: 0, downs: 0 };
       S = d; save(); flash = t(L('Деректер көшірмеден қалпына келтірілді.', 'Данные восстановлены из копии.')); go('home');
     });
+  };
+
+  /* ---------------- Күнделікті раунд ---------------- */
+  var DTITLE = L('Күнделікті раунд', 'Тренировка дня');
+  var dRemain = function (ses) { return ses.items.filter(function (x) { return !x.done; }).length; };
+  var dProgress = function (ses) {
+    return '<div class="dbar" aria-hidden="true">' + ses.items.map(function (x, i) { return '<i class="' + (x.done ? 'done' : '') + (i === ses.cur ? ' cur' : '') + (i > 0 && ses.items[i - 1].r !== x.r ? ' gap' : '') + '"></i>'; }).join('') + '</div>';
+  };
+  var streakLine = function (st) {
+    if (!st.days) return '<p class="muted">' + esc(t(L('Алғашқы раундтан кейін серия мен рекорд осында көрінеді.', 'После первого раунда здесь появятся серия и рекорд.'))) + '</p>';
+    return '<div class="dstats"><div><b>' + st.streak + '</b><span>' + esc(t(L('күн қатарынан', 'дней подряд'))) + '</span></div><div><b>' + st.best + '</b><span>' + esc(t(L('ең ұзақ серия', 'лучшая серия'))) + '</span></div><div><b>' + st.record + '</b><span>' + esc(t(L('рекорд (дұрыс жауап)', 'рекорд (верных ответов)'))) + '</span></div><div><b>' + st.days + '</b><span>' + esc(t(L('барлық күн', 'всего дней'))) + '</span></div></div>';
+  };
+  var badgesHtml = function (st) {
+    return '<div class="badges">' + st.badges.map(function (b) { return '<div class="badge' + (b.got ? ' got' : '') + '"><span class="bi" aria-hidden="true">' + (b.got ? '★' : '☆') + '</span><span><b>' + esc(t(b.name)) + '</b><br><span class="muted sm">' + esc(t(b.desc)) + '</span></span></div>'; }).join('') + '</div>';
+  };
+  var dailyCard = function () {
+    var ses = S.sessions.daily, st = NP.dailyStats(S, Date.now()), h = '<h2>' + esc(t(DTITLE)) + '</h2>';
+    if (ses && !ses.finished) {
+      var it = ses.items[ses.cur];
+      h += '<p>' + esc(t(L('Аяқталмаған раунд: ', 'Незавершённая тренировка: '))) + '<b>' + esc(t(L('раунд ', 'раунд '))) + (it.r + 1) + ' / ' + ses.rounds.length + '</b> · ' + dRemain(ses) + ' ' + esc(t(L('тапсырма қалды', 'заданий осталось'))) + '</p>' + dProgress(ses) + '<div class="row wrap-row"><a class="btn pri big" href="#daily">' + esc(t(TX.resume)) + '</a></div>';
+    } else if (st.today) {
+      h += '<p>' + esc(t(L('Бүгінгі раунд орындалды. Жарайсың! Қаласаң, тағы бір қысқа раунд жасауға болады.', 'Сегодняшняя тренировка выполнена. Молодец! Если хочешь, можно пройти ещё короткий раунд.'))) + '</p><div class="row wrap-row"><button class="btn big" data-act="d-start" data-v="short">' + esc(t(L('Тағы 5 минут', 'Ещё 5 минут'))) + '</button></div>';
+    } else {
+      h += '<p>' + esc(t(L('Aiplus-тағы дайындыққа қосымша: күн сайын қысқа жаттығу. Математика, логика, ағылшын және кезекпен басқа пәндер.', 'Дополнение к занятиям в Aiplus: короткая тренировка каждый день. Математика, логика, английский и по очереди другие предметы.'))) + '</p><div class="modes"><button class="mode" data-act="d-start" data-v="short"><b>' + esc(t(L('Қысқа', 'Короткая'))) + '</b><span>≈ 5 ' + esc(t(TX.min)) + '</span><small>' + esc(t(L('3 раунд · 5 тапсырма', '3 раунда · 5 заданий'))) + '</small></button><button class="mode pri" data-act="d-start" data-v="normal"><b>' + esc(t(L('Қалыпты', 'Обычная'))) + '</b><span>≈ 10–15 ' + esc(t(TX.min)) + '</span><small>' + esc(t(L('3–4 раунд · 11 тапсырма', '3–4 раунда · 11 заданий'))) + '</small></button></div>';
+    }
+    return card(h + streakLine(st), 'dhero');
+  };
+  var viewDaily = function () {
+    var ses = S.sessions.daily;
+    if (!ses) {
+      var st = NP.dailyStats(S, Date.now()), en = S.en || {};
+      var h = h1(esc(t(DTITLE)), esc(t(L('Қысқа раундтар: алдымен жаттығу, кейін негізгі тапсырма, соңында «күннің есебі». Жылдамдық емес, дұрыс ойлау маңызды.', 'Короткие раунды: разминка, основное задание и в конце «задача дня». Важна не скорость, а правильное рассуждение.'))));
+      h += dailyCard();
+      h += card('<h2>' + esc(t(L('Не кіреді', 'Что входит'))) + '</h2><ul class="th"><li><b>' + esc(t(L('Математикалық спринт', 'Математический спринт'))) + '</b> — ' + esc(t(L('3–4 тапсырма, қиындығы біртіндеп артады', '3–4 задания с нарастающей сложностью'))) + '</li><li><b>' + esc(t(L('Логикалық квест', 'Логический квест'))) + '</b> — ' + esc(t(L('салыстыру (А және В бағандары), заңдылық, логика', 'сравнение колонок А и В, закономерности, логика'))) + '</li><li><b>English mini-round</b> — ' + esc(t(en.placed ? L('деңгей: ' + en.level + ' (шамамен ' + NP.CEFR[en.level] + ')', 'уровень: ' + en.level + ' (примерно ' + NP.CEFR[en.level] + ')') : L('алғашқы қалыпты раундта деңгей анықталады', 'в первой обычной тренировке определится уровень'))) + '</li><li><b>' + esc(t(L('Қосымша раунд', 'Дополнительный раунд'))) + '</b> — ' + esc(t(L('жаратылыстану, қазақ тілі немесе орыс тілі (күн сайын ауысады; тек қалыпты режимде)', 'естествознание, казахский или русский (меняется по дням; только в обычном режиме)'))) + '</li></ul><p class="muted sm">' + esc(t(L('Тыңдалым (аудио) бұл сайтта жоқ — ағылшын тілі тек оқу мен жазбаша тапсырмалар арқылы тексеріледі.', 'Аудирования (аудио) на сайте нет — английский проверяется только через чтение и письменные задания.'))) + '</p>');
+      h += card('<h2>' + esc(t(L('Белгілер', 'Значки'))) + '</h2>' + badgesHtml(st));
+      return h;
+    }
+    var it = ses.items[ses.cur];
+    if (!ses.intro[it.r]) return dIntro(ses, it.r);
+    return dQuestion(ses);
+  };
+  var dIntro = function (ses, ri) {
+    var rd = ses.rounds[ri], its = ses.items.filter(function (x) { return x.r === ri; });
+    var cls = { math: 's-math', logic: 's-qc', en: 's-en', sci: 's-sci', kk: 's-kk', ru: 's-ru' }[rd.kind];
+    var h = '<div class="' + cls + '" style="display:contents">' + dProgress(ses);
+    h += '<section class="card dintro"><div class="muted">' + esc(t(L('Раунд', 'Раунд'))) + ' ' + (ri + 1) + ' / ' + ses.rounds.length + '</div><h1>' + esc(t(rd.title)) + '</h1><p class="lead">' + esc(t(rd.sub)) + '</p>' +
+      '<div class="ladder">' + its.map(function (x) { return '<span class="pill' + (x.slot === 'boss' ? ' boss' : '') + '">' + esc(t(NP.SLOT[x.slot] || NP.SLOT.main)) + '</span>'; }).join('<span class="arrow" aria-hidden="true">→</span>') + '</div>' +
+      '<p>' + its.length + ' ' + esc(t(L('тапсырма', 'задания'))) + '</p>' +
+      ((ri === 0 ? ses.reasons : []).concat(rd.why || []).length ? '<div class="why"><b>' + esc(t(L('Неге бұл тапсырмалар?', 'Почему эти задания?'))) + '</b><ul>' + (ri === 0 ? ses.reasons : []).concat(rd.why || []).map(function (w) { return '<li>' + esc(t(w)) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<div class="row wrap-row"><button class="btn pri big" data-act="d-begin">' + esc(t(L('Раундты бастау', 'Начать раунд'))) + '</button>' + (ses.cur > 0 ? '<button class="btn" data-act="d-prev">← ' + esc(t(TX.back)) + '</button>' : '') + '<a class="btn ghost" href="#home">' + esc(t(L('Кейін', 'Позже'))) + '</a></div></section></div>';
+    return h;
+  };
+  var REASON_ORDER = ['topic', 'read', 'calc', 'time', 'guess', 'other'];
+  var dQuestion = function (ses) {
+    var i = ses.cur, it = ses.items[i], inst = NP.build(it.id, it.seed), rd = ses.rounds[it.r];
+    var lg = inst.fixed === 'kk' || inst.fixed === 'ru' ? inst.fixed : S.ql, Lx = inst.L[lg], Lh = inst.L[S.ql];
+    var inRound = ses.items.filter(function (x) { return x.r === it.r; }), pos = inRound.indexOf(it) + 1;
+    var cls = 's-' + inst.s;
+    var h = '<div class="' + cls + '" style="display:contents">';
+    h += '<div class="dhead"><div><div class="muted sm">' + esc(t(L('Раунд', 'Раунд'))) + ' ' + (it.r + 1) + ' / ' + ses.rounds.length + '</div><b>' + esc(t(rd.title)) + '</b></div><div class="dcount"><b>' + pos + ' / ' + inRound.length + '</b><span>' + dRemain(ses) + ' ' + esc(t(L('қалды', 'осталось'))) + '</span></div></div>' + dProgress(ses);
+    var note = inst.fixed === 'kk' ? TX.fixedKk : inst.fixed === 'ru' ? TX.fixedRu : inst.fixed === 'en' ? TX.fixedEn : null;
+    h += '<article class="qcard"><div class="qmeta"><span class="pill' + (it.slot === 'boss' ? ' boss' : '') + '">' + esc(t(NP.SLOT[it.slot] || NP.SLOT.main)) + '</span><span class="pill soft">' + esc(t(NP.TOPICS[inst.t].name)) + '</span></div>' +
+      (note && pos === 1 ? '<p class="note sm">' + esc(t(note)) + '</p>' : '') +
+      (inst.type === 'qc' ? '<p class="note sm">' + esc(lg === 'kk' ? 'A — А үлкен, B — В үлкен, C — тең, D — ақпарат жеткіліксіз.' : 'A — больше А, B — больше В, C — равны, D — недостаточно информации.') + '</p>' : '') +
+      '<div class="stem" lang="' + (inst.fixed || lg) + '">' + Lx.stem + '</div><div class="opts" role="radiogroup">' + Lx.opts.map(function (o, k) {
+        var c = 'opt' + (it.sel === k ? ' sel' : ''); if (it.done) { if (k === inst.ans) c += ' right'; else if (k === it.sel) c += ' wrongpick'; }
+        return '<button type="button" class="' + c + '" data-act="d-pick" data-v="' + k + '" role="radio" aria-checked="' + (it.sel === k) + '"' + (it.done ? ' disabled' : '') + '><span class="lt">' + optLetter[k] + '</span><span class="ot" lang="' + (inst.fixed || lg) + '">' + o + '</span></button>';
+      }).join('') + '</div>';
+    if (!it.done) {
+      h += '<div class="row wrap-row"><button class="btn pri big" data-act="d-check"' + (it.sel === null || it.sel === undefined ? ' disabled' : '') + '>' + esc(t(TX.check)) + '</button>' + (it.hint ? '' : '<button class="btn" data-act="d-hint">' + esc(t(TX.hint)) + '</button>') + '</div>';
+      if (it.hint) h += '<div class="note hint"><b>' + esc(t(TX.hint)) + ':</b> ' + Lh.h + '</div>';
+    } else {
+      var ok = it.sel === inst.ans;
+      h += '<div class="fb ' + (ok ? 'good' : 'badc') + '"><div class="fb-h">' + esc(t(ok ? L('Дұрыс!', 'Верно!') : L('Қате, бірақ бұл — үйренудің бөлігі', 'Неверно, но это часть учёбы'))) + '</div>';
+      if (!ok) h += '<p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[inst.ans] + ') ' + Lx.opts[inst.ans] + '</p>';
+      h += '<p><b>' + esc(t(TX.expl)) + ':</b> ' + Lh.e + '</p>';
+      if (!ok && Lh.whys[it.sel]) h += '<p><b>' + esc(t(L('Мүмкін қате', 'Возможная ошибка'))) + ':</b> ' + Lh.whys[it.sel] + '</p>';
+      if (ok) { var tk = Lh.whys.findIndex(function (w, j) { return j !== inst.ans && w; }); if (tk >= 0) h += '<p><b>' + esc(t(TX.trap)) + ' (' + optLetter[tk] + '):</b> ' + Lh.whys[tk] + '</p>'; }
+      if (it.enChange) h += '<p class="note">' + esc(t(it.enChange === 'up' ? L('English деңгейі көтерілді: енді ' + S.en.level + '-деңгей.', 'Уровень English повышен: теперь ' + S.en.level + '.') : L('English тапсырмалары уақытша сәл жеңілірек болады (' + S.en.level + '-деңгей). Бұл қалыпты жағдай.', 'Задания English временно станут чуть проще (уровень ' + S.en.level + '). Это нормально.'))) + '</p>';
+      if (!ok && it.mid) {
+        var m = S.mistakes.filter(function (x) { return x.mid === it.mid; })[0];
+        h += '<div class="reasons"><b>' + esc(t(L('Неге қателестің?', 'Почему ошибся?'))) + '</b><div class="chips">' + REASON_ORDER.map(function (k) { return '<button type="button" class="chip' + (m && m.reason === k ? ' on' : '') + '" data-act="d-reason" data-v="' + k + '" aria-pressed="' + !!(m && m.reason === k) + '">' + esc(t(REASONS[k])) + '</button>'; }).join('') + '</div><p class="muted sm">' + esc(t(L('Қате журналға жазылды. Бұл дағды келесі күндері жаңа тапсырмамен қайта тексеріледі.', 'Ошибка записана в журнал. Этот навык проверим снова в следующие дни на новом задании.'))) + '</p></div>';
+      }
+      if (!it.simAdded) h += '<button class="btn" data-act="d-similar">+ ' + esc(t(L('Ұқсас тапсырма қазір', 'Похожее задание сейчас'))) + '</button>';
+      h += '</div>';
+    }
+    h += '</article>';
+    var last = i === ses.items.length - 1, nextRound = !last && ses.items[i + 1].r !== it.r;
+    h += '<div class="navbar"><button class="btn" data-act="d-prev"' + (i === 0 ? ' disabled' : '') + '>← ' + esc(t(TX.back)) + '</button><span></span><button class="btn pri" data-act="d-next"' + (it.done ? '' : ' disabled') + '>' + esc(t(last ? L('Аяқтау', 'Завершить') : nextRound ? L('Келесі раунд', 'Следующий раунд') : TX.next)) + ' →</button></div>';
+    h += '<div class="row wrap-row endrow"><a class="btn ghost" href="#home">' + esc(t(L('Кейін жалғастыру', 'Продолжить позже'))) + '</a></div></div>';
+    return h;
+  };
+  var startDaily = function (mode) {
+    var now = Date.now(), d = NP.buildDaily(S, mode, now, (now ^ Math.floor(Math.random() * 1e9)) >>> 0);
+    var ses = { sid: NP.uid(), kind: 'daily', dmode: mode, created: now, date: dayKey(now), rounds: d.rounds, reasons: d.reasons, estMin: d.estMin, placement: d.placement,
+      items: d.items.map(function (x) { return { id: x.id, seed: x.seed, s: x.s, r: x.r, slot: x.slot, sel: null, done: false, hint: false, mid: null }; }), cur: 0, intro: {}, elapsed: 0, finished: null };
+    var cur = S.sessions.daily;
+    var doit = function () { S.sessions.daily = ses; save(); go('daily'); };
+    if (cur && !cur.finished && cur.items.some(function (x) { return x.done; })) ask(esc(t(L('Аяқталмаған раунд жабылады. Берілген жауаптар журналда сақталады. Жаңасын бастау керек пе?', 'Незавершённая тренировка закроется. Уже данные ответы сохранены в журнале. Начать новую?'))), t(L('Иә, бастау', 'Да, начать')), doit);
+    else doit();
+  };
+  var finishDaily = function () {
+    var ses = S.sessions.daily; if (!ses) return;
+    var before = NP.dailyStats(S, Date.now()).badges.filter(function (b) { return b.got; }).map(function (b) { return b.id; });
+    var items = ses.items.map(function (x) { var inst = NP.build(x.id, x.seed); return { id: x.id, seed: x.seed, s: inst.s, t: inst.t, k: inst.k, sel: x.sel, ans: inst.ans, ok: x.sel === inst.ans, sec: 'all', slot: x.slot, r: x.r }; });
+    var c = items.filter(function (x) { return x.ok; }).length, aid = NP.uid();
+    var a = { aid: aid, kind: 'daily', sub: ses.dmode, title: DTITLE, mode: 'study', ts: Date.now(), dur: ses.elapsed, sections: [{ key: 'all', c: c, n: items.length }], items: items, c: c, n: items.length, flags: {}, rounds: ses.rounds.map(function (r) { return { title: r.title, kind: r.kind }; }), enPlaced: ses.enPlaced || null, enLevel: S.en ? S.en.level : null };
+    S.attempts.unshift(a);
+    var after = NP.dailyStats(S, Date.now()).badges.filter(function (b) { return b.got && before.indexOf(b.id) < 0; }).map(function (b) { return b.id; });
+    a.newBadges = after; S.sessions.daily = null; save(); stopDTimer(); go('dsum-' + aid);
+  };
+  var viewDSum = function (aid) {
+    var a = S.attempts.filter(function (x) { return x.aid === aid; })[0]; if (!a) return viewDaily();
+    var st = NP.dailyStats(S, Date.now());
+    var h = h1(esc(t(L('Раунд аяқталды!', 'Тренировка завершена!'))), esc(t(L('Ең бастысы — күн сайын аздап. Нәтиже тек өзіңмен салыстырылады.', 'Главное — понемногу каждый день. Результат сравнивается только с тобой.'))));
+    h += '<div class="grid3">' + card('<div class="k">' + esc(t(TX.c)) + '</div><div class="big">' + a.c + ' / ' + a.n + '</div>', 'stat') + card('<div class="k">' + esc(t(L('Серия', 'Серия'))) + '</div><div class="big">' + st.streak + '</div><div class="muted">' + esc(t(L('күн қатарынан', 'дней подряд'))) + '</div>', 'stat') + card('<div class="k">' + esc(t(L('Уақыт', 'Время'))) + '</div><div class="big">' + Math.max(1, Math.round((a.dur || 0) / 60000)) + ' ' + esc(t(TX.min)) + '</div><div class="muted">' + esc(t(L('тек ақпарат үшін', 'просто для информации'))) + '</div>', 'stat') + '</div>';
+    h += card('<h2>' + esc(t(L('Раундтар бойынша', 'По раундам'))) + '</h2>' + NP.table([esc(t(L('Раунд', 'Раунд'))), esc(t(TX.c))], (a.rounds || []).map(function (r, ri) { var xs = a.items.filter(function (x) { return x.r === ri; }); return [esc(t(r.title)), xs.filter(function (x) { return x.ok; }).length + ' / ' + xs.length]; })));
+    if (a.enPlaced) h += card('<h2>English</h2><p>' + esc(t(L('Сенің бастапқы деңгейің: ' + a.enPlaced + ' (шамамен ' + NP.CEFR[a.enPlaced] + '). Бұл 6 тапсырмаға негізделген алғашқы баға — келесі раундтарда ол нақтыланады.', 'Твой стартовый уровень: ' + a.enPlaced + ' (примерно ' + NP.CEFR[a.enPlaced] + '). Это первая оценка по 6 заданиям — дальше она уточнится.'))) + '</p>');
+    var wr = {}; a.items.forEach(function (x) { if (!x.ok) wr[x.s + ':' + x.k] = x; });
+    var wk = Object.keys(wr);
+    h += card('<h2>' + esc(t(L('Келесі раундтарда қайталаймыз', 'Повторим в следующих тренировках'))) + '</h2>' + (wk.length ? '<div class="chips">' + wk.map(function (k) { var x = wr[k]; return '<a class="chip" href="#learn-' + x.t + '">' + esc(t(NP.TOPICS[x.t].name)) + ' · ' + esc(t(NP.SKILL[x.k] || L(x.k, x.k))) + '</a>'; }).join('') + '</div><p class="muted sm">' + esc(t(L('Бұл дағдылар бір дұрыс жауаптан кейін «түзетілді» деп белгіленбейді — оларды кейін тағы тексереміз.', 'Эти навыки не считаются исправленными после одного верного ответа — проверим их ещё раз позже.'))) + '</p>' : '<p>' + esc(t(L('Бүгін қате жоқ. Жарайсың!', 'Сегодня без ошибок. Молодец!'))) + '</p>'));
+    if (a.newBadges && a.newBadges.length) h += card('<h2>' + esc(t(L('Жаңа белгі', 'Новый значок'))) + '</h2>' + badgesHtml({ badges: st.badges.filter(function (b) { return a.newBadges.indexOf(b.id) >= 0; }) }), 'hl');
+    h += '<div class="row wrap-row"><a class="btn pri big" href="#home">' + esc(t(TX.home)) + '</a><a class="btn" href="#mistakes">' + esc(t(TX.mistakes)) + '</a><a class="btn" href="#attempt-' + a.aid + '">' + esc(t(L('Барлық тапсырма', 'Все задания'))) + '</a></div>';
+    return h;
+  };
+  var dTimer = null, dLast = 0;
+  var startDTimer = function () {
+    if (dTimer) return; dLast = Date.now();
+    dTimer = setInterval(function () {
+      var ses = S.sessions.daily; if (!ses || route() !== 'daily') { stopDTimer(); return; }
+      var now = Date.now(); ses.elapsed = (ses.elapsed || 0) + Math.min(now - dLast, 5000); dLast = now;
+      if (Math.floor(now / 1000) % 10 === 0) save();
+    }, 1000);
+  };
+  var stopDTimer = function () { if (dTimer) clearInterval(dTimer); dTimer = null; };
+  var dAct = function (a, v) {
+    var ses = S.sessions.daily; if (!ses && a !== 'd-start') return false;
+    var it = ses ? ses.items[ses.cur] : null;
+    switch (a) {
+      case 'd-start': startDaily(v); return true;
+      case 'd-begin': ses.intro[it.r] = true; save(); render(); window.scrollTo(0, 0); return true;
+      case 'd-pick': if (!it.done) { it.sel = +v; save(); render(); } return true;
+      case 'd-hint': it.hint = true; save(); render(); return true;
+      case 'd-check':
+        if (it.done || it.sel === null || it.sel === undefined) return true;
+        var inst = NP.build(it.id, it.seed), tpl = NP.byId[it.id];
+        it.done = true; it.ok = record(it, inst, it.sel, 'daily', DTITLE); it.mid = record.lastMid || null;
+        var rd = ses.rounds[it.r];
+        if (tpl.t === 'enmini') {
+          if (rd.place) { var pl = ses.items.filter(function (x) { return x.r === it.r; }); if (pl.every(function (x) { return x.done; })) ses.enPlaced = NP.enPlace(S, pl.map(function (x) { return { id: x.id, ok: x.ok }; })); }
+          else it.enChange = NP.enAfter(S, tpl, it.ok);
+        }
+        save(); render(); return true;
+      case 'd-reason':
+        var m = S.mistakes.filter(function (x) { return x.mid === it.mid; })[0];
+        if (m) { m.reason = v; if (m.status === 'new') m.status = 'work'; save(); render(); } return true;
+      case 'd-similar':
+        var base = NP.byId[it.id], stat = base.g.length === 0, pick = base;
+        if (stat) {
+          var inS = {}; ses.items.forEach(function (x) { inS[x.id] = 1; });
+          var cands = NP.TPL.filter(function (x) { return x.t === base.t && !inS[x.id] && (!base.lv || Math.abs((x.lv || 1) - base.lv) <= 1); });
+          pick = cands.filter(function (x) { return x.k === base.k; })[0] || cands[0];
+        }
+        if (!pick) { flash = t(L('Бұл тақырыпта жаңа ұқсас тапсырма қалмады.', 'В этой теме больше нет новых похожих заданий.')); render(); return true; }
+        it.simAdded = true;
+        ses.items.splice(ses.cur + 1, 0, { id: pick.id, seed: stat ? 1 : Math.floor(Math.random() * 2e9) + 1, s: pick.s, r: it.r, slot: 'similar', sel: null, done: false, hint: false, mid: null });
+        ses.cur++; flash = null; save(); render(); window.scrollTo(0, 0); return true;
+      case 'd-next':
+        if (!it.done) return true;
+        if (ses.cur >= ses.items.length - 1) { finishDaily(); return true; }
+        ses.cur++; save(); render(); window.scrollTo(0, 0); return true;
+      case 'd-prev': if (ses.cur > 0) { ses.cur--; ses.intro[ses.items[ses.cur].r] = true; save(); render(); window.scrollTo(0, 0); } return true;
+    }
+    return false;
   };
 
   /* ---------------- Рендер ---------------- */
@@ -572,9 +754,12 @@
     else if (r === 'mistakes') main = viewMistakes();
     else if (r === 'plan') main = viewPlan();
     else if (r === 'data') main = viewData();
+    else if (r === 'daily') main = viewDaily();
+    else if (r.indexOf('dsum-') === 0) main = viewDSum(r.slice(5));
     else main = viewHome();
     document.getElementById('app').innerHTML = shell(main);
     if (r.indexOf('run-') === 0 && S.sessions[r.slice(4)] && !tickTimer) startTicker();
+    if (r === 'daily' && S.sessions.daily) startDTimer(); else stopDTimer();
   };
 
   /* ---------------- События ---------------- */
@@ -585,6 +770,7 @@
     var ses = curSlot ? S.sessions[curSlot] : null;
     switch (a) {
       case 'ui': S.ui = v; save(); render(); break;
+      case 'd-start': case 'd-begin': case 'd-pick': case 'd-hint': case 'd-check': case 'd-reason': case 'd-similar': case 'd-next': case 'd-prev': dAct(a, v); break;
       case 'ql': S.ql = v; save(); render(); break;
       case 'modal-no': modal = null; render(); break;
       case 'modal-yes': var f = modal && modal.onYes; modal = null; if (f) f(); else render(); break;

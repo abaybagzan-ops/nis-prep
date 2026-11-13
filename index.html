@@ -238,6 +238,37 @@ h1 { font-size: 1.75rem; }
 .ri, .mcard { border-width: 2px; border-radius: 14px; }
 svg .bar { fill: var(--sc, var(--accent)); }
 @media (prefers-reduced-motion: reduce) { .tile:hover { transform: none; } }
+
+/* ===== Күнделікті раунд ===== */
+.card.dhero { border-color: var(--accent); background: linear-gradient(160deg, var(--accent-weak), var(--surface) 70%); box-shadow: 0 4px 0 var(--accent); }
+.btn.big { min-height: 54px; padding: 10px 22px; font-size: 1.05rem; }
+.modes { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+.mode { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; font: inherit; color: var(--ink); background: var(--surface); border: 2px solid var(--line); border-radius: 18px; padding: 14px 16px; box-shadow: 0 4px 0 var(--line); cursor: pointer; min-height: 96px; }
+.mode b { font-size: 1.15rem; font-weight: 900; } .mode span { font-weight: 800; color: var(--accent); } .mode small { color: var(--muted); font-size: .85rem; }
+.mode.pri { background: var(--accent); border-color: var(--accent); box-shadow: 0 4px 0 var(--accent-dark); color: var(--accent-ink); }
+.mode.pri span, .mode.pri small { color: var(--accent-ink); }
+.mode:active { transform: translateY(2px); }
+.dstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+.dstats > div { background: var(--surface); border: 2px solid var(--line); border-radius: 14px; padding: 8px 10px; display: flex; flex-direction: column; min-width: 0; }
+.dstats b { font-size: 1.4rem; font-weight: 900; font-variant-numeric: tabular-nums; } .dstats span { font-size: .78rem; color: var(--muted); line-height: 1.25; }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; }
+.badge { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 2px dashed var(--line); border-radius: 14px; opacity: .7; }
+.badge.got { border-style: solid; border-color: var(--gold); background: var(--gold-weak); opacity: 1; }
+.badge .bi { font-size: 1.4rem; color: var(--gold); line-height: 1; }
+.dbar { display: flex; gap: 3px; margin: 2px 0 4px; }
+.dbar i { flex: 1; height: 10px; border-radius: 999px; background: var(--line); }
+.dbar i.done { background: var(--sc, var(--accent)); } .dbar i.cur { outline: 2px solid var(--sc, var(--accent)); outline-offset: 1px; background: var(--st, var(--accent-weak)); }
+.dbar i.gap { margin-left: 8px; }
+.dhead { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--surface); border: 2px solid var(--line); border-left: 8px solid var(--sc, var(--accent)); border-radius: 16px; padding: 10px 14px; }
+.dcount { display: flex; flex-direction: column; align-items: flex-end; } .dcount b { font-size: 1.3rem; font-weight: 900; color: var(--sc, var(--accent)); font-variant-numeric: tabular-nums; } .dcount span { font-size: .8rem; color: var(--muted); }
+.dintro { border-color: var(--sc, var(--accent)); background: linear-gradient(160deg, var(--st, var(--accent-weak)), var(--surface) 75%); box-shadow: 0 4px 0 var(--sc, var(--accent)); display: flex; flex-direction: column; gap: 10px; }
+.dintro h1 { margin: 0; color: var(--ink); }
+.ladder { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; } .ladder .arrow { color: var(--muted); }
+.pill.boss { background: var(--gold); color: #2b1a00; }
+.why { background: var(--surface); border-radius: 14px; padding: 10px 14px; border: 2px solid var(--line); } .why ul { margin: 6px 0 0; padding-left: 1.2em; }
+.reasons { margin-top: 10px; } .reasons .chips { margin: 8px 0; }
+.chip { cursor: pointer; font: inherit; font-size: .88rem; } .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+@media (max-width: 560px) { .dstats { grid-template-columns: 1fr 1fr; } .modes { grid-template-columns: 1fr 1fr; } .mode { min-height: 88px; padding: 12px; } .dhead { padding: 8px 12px; } }
 </style></head><body>
 <div id="app"><p style="padding:24px">Жүктелуде… / Загрузка…</p></div>
 <noscript><p style="padding:24px">JavaScript қосыңыз. / Включите JavaScript.</p></noscript>
@@ -2492,6 +2523,452 @@ NP._assemble = function (tpl, g, r) {
 })();
 
 ;
+/* Короткие задания для ежедневных раундов: разминка по математике (уровень 1),
+   английский по уровням (lv 1–3), короткие задания по казахскому и русскому, дополнительное естествознание.
+   Все задания авторские. */
+(function () {
+  var T = NP.T, F = NP.F, fr = NP.fr, L = NP.L, pl = NP.pl;
+
+  /* ===================== МАТЕМАТИКА: РАЗМИНКА ===================== */
+  var W = function (id, t, k, g) { T({ id: id, s: 'math', t: t, k: k, d: 1, g: g }); };
+  W('w_frac_of', 'frac', 'frac.part', function (r) {
+    var b = r.pick([3, 4, 5, 6, 8]), a = r.int(1, b - 1), N = b * r.int(4, 15); if (NP.gcd(a, b) !== 1) return null;
+    var ans = N / b * a;
+    return { q: L(N + ' санының ' + fr(a, b) + ' бөлігі неге тең?', 'Чему равны ' + fr(a, b) + ' от ' + N + '?'), a: F(ans),
+      w: [[F(N / b), L('Бұл — тек бір бөлік (' + fr(1, b) + '). Оны ' + a + '-ге көбейту керек еді.', 'Это лишь одна часть (' + fr(1, b) + '). Её нужно умножить на ' + a + '.')],
+          [F(N * a), L('Бөлімге бөлуді ұмытқан.', 'Забыли разделить на знаменатель.')],
+          [F(N - ans), L('Бұл — қалған бөлік.', 'Это оставшаяся часть.')]],
+      h: L('Алдымен ' + N + ' санын ' + b + ' бөлікке бөліңіз.', 'Сначала разделите ' + N + ' на ' + b + ' частей.'),
+      e: L(N + ' : ' + b + ' = ' + (N / b) + '; ' + (N / b) + ' · ' + a + ' = ' + ans + '. Жауабы: ' + ans + '.', N + ' : ' + b + ' = ' + (N / b) + '; ' + (N / b) + ' · ' + a + ' = ' + ans + '. Ответ: ' + ans + '.') };
+  });
+  W('w_pct_of', 'pct', 'pct.find', function (r) {
+    var p = r.pick([5, 10, 15, 20, 25, 30, 40, 75]), N = r.pick([40, 60, 80, 120, 160, 200, 240, 360]), ans = N * p / 100;
+    if (ans % 1) return null;
+    return { q: L(N + ' санының ' + p + '%-ы неге тең?', 'Чему равно ' + p + '% от ' + N + '?'), a: F(ans),
+      w: [[F(N / p), L('Санды пайызға бөлген. p% = p/100 бөлігі.', 'Разделили число на процент. p% — это p/100 числа.')],
+          [F(N - ans), L('Бұл — қалған ' + (100 - p) + '%.', 'Это оставшиеся ' + (100 - p) + '%.')],
+          [F(N * p / 10), L('100-ге емес, 10-ға бөлген.', 'Разделили на 10, а не на 100.')]],
+      h: L('1% — санның жүзден бір бөлігі.', '1% — сотая часть числа.'),
+      e: L(N + ' · ' + p + ' : 100 = ' + F(ans) + '. Жауабы: ' + F(ans) + '.', N + ' · ' + p + ' : 100 = ' + F(ans) + '. Ответ: ' + F(ans) + '.') };
+  });
+  W('w_dec_mult', 'units', 'qc.decimal', function (r) {
+    var a = r.int(2, 9), b = r.int(2, 9), c = r.pick([1, 10]);
+    var Ad = c === 1 ? a / 10 : a;
+    return { q: L('Есептеңіз: ' + F(Ad) + ' · 0,' + b, 'Вычислите: ' + F(Ad) + ' · 0,' + b), a: F(Ad * b / 10),
+      w: [[F(Ad * b / 10 * 10), L('Үтірден кейінгі цифрлар санын қате санаған.', 'Неверно посчитали число знаков после запятой.')],
+          [F(Ad * b / 10 / 10), L('Үтірді тым көп оңға жылжытқан.', 'Сдвинули запятую слишком далеко.')],
+          [F(Ad + b / 10), L('Көбейтудің орнына қосқан.', 'Сложили вместо умножения.')]],
+      h: L('Үтірсіз көбейтіңіз, содан кейін үтірден кейінгі цифрларды санаңыз.', 'Умножьте без запятых, затем отсчитайте знаки после запятой.'),
+      e: L(F(Ad) + ' · 0,' + b + ' = ' + F(Ad * b / 10) + '. Жауабы: ' + F(Ad * b / 10) + '.', F(Ad) + ' · 0,' + b + ' = ' + F(Ad * b / 10) + '. Ответ: ' + F(Ad * b / 10) + '.') };
+  });
+  W('w_order_ops', 'eq', 'eq.solve', function (r) {
+    var b = r.int(2, 5), c = b * r.int(2, 6), a = r.int(c / b + 2, 30), d = r.int(1, 9);
+    var ans = a - c / b + d, w1 = (a - c) / b + d, w2 = a - c / (b + d);
+    if (w1 % 1 || w2 % 1) { w1 = (a - c / b) * d; w2 = a + c / b + d; }
+    return { q: L('Есептеңіз: ' + a + ' − ' + c + ' : ' + b + ' + ' + d, 'Вычислите: ' + a + ' − ' + c + ' : ' + b + ' + ' + d), a: F(ans),
+      w: [[F(w1), L('Амалдарды солдан оңға қарай ретімен орындаған. Бөлу азайтудан бұрын орындалады.', 'Выполнили действия просто слева направо. Деление выполняется раньше вычитания.')],
+          [F(w2), L('Жақша жоқ жерге жақша қойған.', 'Мысленно поставили скобки, которых нет.')],
+          [F(a - c / b - d), L('Соңғы қосуды азайту деп алған.', 'Последнее сложение выполнили как вычитание.')]],
+      h: L('Алдымен көбейту мен бөлу, кейін қосу мен азайту.', 'Сначала умножение и деление, потом сложение и вычитание.'),
+      e: L(c + ' : ' + b + ' = ' + (c / b) + '; ' + a + ' − ' + (c / b) + ' + ' + d + ' = ' + ans + '. Жауабы: ' + ans + '.', c + ' : ' + b + ' = ' + (c / b) + '; ' + a + ' − ' + (c / b) + ' + ' + d + ' = ' + ans + '. Ответ: ' + ans + '.') };
+  });
+  W('w_len_units', 'units', 'units.len', function (r) {
+    var v = r.int(11, 95) / 10;
+    return { q: L(F(v) + ' км неше метр?', 'Сколько метров в ' + F(v) + ' км?'), a: F(v * 1000) + ' м',
+      w: [[F(v * 100) + ' м', L('1 км = 1000 м, 100 м емес.', '1 км = 1000 м, а не 100 м.')], [F(v * 10000) + ' м', L('1000-ға емес, 10 000-ға көбейткен.', 'Умножили на 10 000 вместо 1000.')], [F(Math.floor(v) * 1000 + Math.round((v % 1) * 10)) + ' м', L('Үтірден кейінгі цифрды метр деп оқыған.', 'Прочитали цифру после запятой как метры.')]],
+      h: L('1 км = 1000 м.', '1 км = 1000 м.'),
+      e: L(F(v) + ' · 1000 = ' + F(v * 1000) + ' м. Жауабы: ' + F(v * 1000) + ' м.', F(v) + ' · 1000 = ' + F(v * 1000) + ' м. Ответ: ' + F(v * 1000) + ' м.') };
+  });
+  W('w_neg', 'eq', 'qc.neg', function (r) {
+    var a = r.int(3, 15), b = r.int(5, 20), c = r.int(2, 9), ans = -a + b + c;
+    return { q: L('Есептеңіз: −' + a + ' + ' + b + ' − (−' + c + ')', 'Вычислите: −' + a + ' + ' + b + ' − (−' + c + ')'), a: F(ans),
+      w: [[F(-a + b - c), L('«Минус теріс сан» — қосу. Мұнда азайтып жіберген.', '«Минус отрицательное» — это сложение, а здесь вычли.')], [F(a + b + c), L('Бірінші санның таңбасын ескермеген.', 'Не учли знак первого числа.')], [F(-a - b - c), L('Барлық санды теріс деп алған.', 'Посчитали все числа отрицательными.')]],
+      h: L('−(−' + c + ') = +' + c + '.', '−(−' + c + ') = +' + c + '.'),
+      e: L('−' + a + ' + ' + b + ' + ' + c + ' = ' + F(ans) + '. Жауабы: ' + F(ans) + '.', '−' + a + ' + ' + b + ' + ' + c + ' = ' + F(ans) + '. Ответ: ' + F(ans) + '.') };
+  });
+  W('w_ratio', 'ratio', 'ratio.divide', function (r) {
+    var a = r.int(1, 4), b = r.int(a + 1, 7), u = r.int(2, 9), N = (a + b) * u;
+    return { q: L('Ұлдар мен қыздардың саны ' + a + ' : ' + b + ' қатынасындай, барлығы ' + N + ' оқушы. Неше қыз бар?', 'Мальчиков и девочек ' + a + ' : ' + b + ', всего ' + N + ' учеников. Сколько девочек?'), a: F(b * u),
+      w: [[F(a * u), L('Бұл — ұлдар саны.', 'Это число мальчиков.')], [F(N / 2), L('Тең бөлген, бірақ қатынас тең емес.', 'Разделили поровну, а отношение не равное.')], [F(N - a), L('Қатынастағы санды оқушы саны деп алған.', 'Приняли число из отношения за число учеников.')]],
+      h: L('Барлығы неше бөлік?', 'Сколько всего частей?'),
+      e: L((a + b) + ' бөлік = ' + N + ', 1 бөлік = ' + u + '. Қыздар: ' + b + ' · ' + u + ' = ' + (b * u) + '. Жауабы: ' + (b * u) + '.', (a + b) + ' частей = ' + N + ', 1 часть = ' + u + '. Девочек: ' + b + ' · ' + u + ' = ' + (b * u) + '. Ответ: ' + (b * u) + '.') };
+  });
+  W('w_rect', 'geo', 'geo.area', function (r) {
+    var a = r.int(4, 15), b = r.int(3, 12); if (a === b) return null;
+    return { q: L('Қабырғалары ' + a + ' см және ' + b + ' см тіктөртбұрыштың ауданы қандай?', 'Какова площадь прямоугольника со сторонами ' + a + ' см и ' + b + ' см?'), a: F(a * b) + ' см²',
+      w: [[F(2 * (a + b)) + ' см²', L('Бұл — периметрдің мәні.', 'Это значение периметра.')], [F(a + b) + ' см²', L('Қабырғаларды қосқан.', 'Сложили стороны.')], [F(a * b / 2) + ' см²', L('Үшбұрыштың формуласын қолданған.', 'Использовали формулу треугольника.')]],
+      h: L('S = a · b.', 'S = a · b.'),
+      e: L(a + ' · ' + b + ' = ' + (a * b) + ' см². Жауабы: ' + (a * b) + ' см².', a + ' · ' + b + ' = ' + (a * b) + ' см². Ответ: ' + (a * b) + ' см².') };
+  });
+  W('w_triangle', 'geo', 'geo.angle', function (r) {
+    var x = r.int(30, 80), y = r.int(20, 90); if (x + y >= 170) return null;
+    var z = 180 - x - y;
+    return { q: L('Үшбұрыштың екі бұрышы ' + x + '° және ' + y + '°. Үшінші бұрышы неше градус?', 'Два угла треугольника равны ' + x + '° и ' + y + '°. Чему равен третий угол?'), a: F(z) + '°',
+      w: [[F(x + y) + '°', L('Бұл — берілген екі бұрыштың қосындысы.', 'Это сумма двух данных углов.')], [F(360 - x - y) + '°', L('Қосындыны 360° деп алған.', 'Взяли сумму углов 360°.')], [F(z + 10) + '°', L('Азайтуда қате кеткен.', 'Ошибка при вычитании.')]],
+      h: L('Үшбұрыш бұрыштарының қосындысы — 180°.', 'Сумма углов треугольника — 180°.'),
+      e: L('180° − ' + x + '° − ' + y + '° = ' + z + '°. Жауабы: ' + z + '°.', '180° − ' + x + '° − ' + y + '° = ' + z + '°. Ответ: ' + z + '°.') };
+  });
+  W('w_mean3', 'mean', 'mean.reverse', function (r) {
+    var m = r.int(10, 40), a = m + r.int(-8, 8), b = m + r.int(-8, 8), c = 3 * m - a - b;
+    if (c <= 0 || a === b || b === c || a === c) return null;
+    return { q: L(a + ', ' + b + ' және ' + c + ' сандарының арифметикалық ортасы неге тең?', 'Чему равно среднее арифметическое чисел ' + a + ', ' + b + ' и ' + c + '?'), a: F(m),
+      w: [[F(3 * m), L('Бұл — қосынды. Оны 3-ке бөлу керек еді.', 'Это сумма. Её нужно было разделить на 3.')], [F(m + 1), L('Есептеуде қателескен.', 'Ошибка в вычислении.')], [F([a, b, c].sort(function (p, q) { return p - q; })[1]), L('Ортаңғы санды алған — бұл медиана.', 'Взяли среднее по порядку число — это медиана.')]],
+      h: L('Қосындыны сандар санына бөліңіз.', 'Разделите сумму на количество чисел.'),
+      e: L('(' + a + ' + ' + b + ' + ' + c + ') : 3 = ' + (3 * m) + ' : 3 = ' + m + '. Жауабы: ' + m + '.', '(' + a + ' + ' + b + ' + ' + c + ') : 3 = ' + (3 * m) + ' : 3 = ' + m + '. Ответ: ' + m + '.') };
+  });
+  W('w_speed', 'speed', 'speed.towards', function (r) {
+    var v = r.pick([40, 50, 60, 70, 80, 90]), t = r.pick([1.5, 2, 2.5, 3, 4]);
+    var LL = function (x) { return L(F(x) + ' км', F(x) + ' км'); };
+    return { q: L('Автобус ' + v + ' км/сағ жылдамдықпен ' + F(t) + ' сағат жүрді. Ол қанша жол жүрді?', 'Автобус ехал ' + F(t) + ' ч со скоростью ' + v + ' км/ч. Какое расстояние он проехал?'), a: LL(v * t),
+      w: [[LL(Math.round(v / t * 10) / 10), L('Көбейтудің орнына бөлген.', 'Разделили вместо умножения.')], [LL(v + t), L('Жылдамдық пен уақытты қосқан.', 'Сложили скорость и время.')], [LL(v * Math.floor(t)), L('Сағаттың бөлшек бөлігін ескермеген.', 'Не учли дробную часть часа.')]],
+      h: L('s = v · t.', 's = v · t.'),
+      e: L(v + ' · ' + F(t) + ' = ' + F(v * t) + ' км. Жауабы: ' + F(v * t) + ' км.', v + ' · ' + F(t) + ' = ' + F(v * t) + ' км. Ответ: ' + F(v * t) + ' км.') };
+  });
+  W('w_seq', 'seq', 'seq.arith', function (r) {
+    var a = r.int(2, 20), d = r.int(3, 12), s = [a, a + d, a + 2 * d, a + 3 * d];
+    return { q: L('Келесі санды табыңыз: ' + s.join(', ') + ', …', 'Найдите следующее число: ' + s.join(', ') + ', …'), a: F(a + 4 * d),
+      w: [[F(a + 4 * d + 1), L('Айырымды бір бірлікке қате алған.', 'Ошиблись в разности на единицу.')], [F(s[3] * 2), L('Соңғы санды 2-ге көбейткен, бірақ мұнда қосу ережесі.', 'Удвоили последнее число, а здесь правило сложения.')], [F(a + 5 * d), L('Бір қадамды артық жасаған.', 'Сделали лишний шаг.')]],
+      h: L('Көршілес сандардың айырымы қандай?', 'Какова разность соседних чисел?'),
+      e: L('Айырым ' + d + '. ' + s[3] + ' + ' + d + ' = ' + (a + 4 * d) + '. Жауабы: ' + (a + 4 * d) + '.', 'Разность ' + d + '. ' + s[3] + ' + ' + d + ' = ' + (a + 4 * d) + '. Ответ: ' + (a + 4 * d) + '.') };
+  });
+
+  /* ===================== СТАТИЧНЫЕ КОРОТКИЕ ЗАДАНИЯ ===================== */
+  var S = function (id, s, t, k, d, c, lv) { T({ id: id, s: s, t: t, k: k, d: d, lv: lv, g: function () { return c; } }); };
+
+  /* ---------- ENGLISH (вопрос на английском, разбор на kk/ru) ---------- */
+  var E = function (id, lv, k, q, a, w, h, e) {
+    S(id, 'en', 'enmini', k, lv, { fixed: 'en', q: q, a: a, w: w.map(function (x) { return [x[0], L(x[1], x[2])]; }), h: L(h[0], h[1]), e: L(e[0], e[1]) }, lv);
+  };
+  var ctx = function (s) { return '<p class="ctx">' + s + '</p>'; };
+  /* Level 1 (≈ A1) */
+  E('en1_odd', 1, 'en.vocab', 'Which word does NOT belong to the group?<br><b>apple, banana, carrot, orange</b>', 'carrot',
+    [['apple', 'Apple — алма, жеміс; ол топқа кіреді.', 'Apple — яблоко, фрукт; оно подходит.'], ['banana', 'Banana — жеміс, топқа кіреді.', 'Banana — фрукт, подходит.'], ['orange', 'Orange — апельсин, жеміс.', 'Orange — апельсин, фрукт.']],
+    ['Үшеуі — жемістер. Біреуі — көкөніс.', 'Три слова — фрукты, одно — овощ.'], ['Carrot — сәбіз, ол көкөніс. Қалғандары — жемістер.', 'Carrot — морковь, это овощ. Остальные — фрукты.']);
+  E('en1_scissors', 1, 'en.vocab', 'We use ___ to cut paper.', 'scissors',
+    [['a spoon', 'Spoon — қасық, онымен тамақ жейді.', 'Spoon — ложка, ею едят.'], ['a pillow', 'Pillow — жастық.', 'Pillow — подушка.'], ['a bucket', 'Bucket — шелек.', 'Bucket — ведро.']],
+    ['Қағазды немен кеседі?', 'Чем режут бумагу?'], ['Scissors — қайшы. Қағазды қайшымен кеседі.', 'Scissors — ножницы. Бумагу режут ножницами.']);
+  E('en1_cheap', 1, 'en.vocab', 'The opposite of <b>cheap</b> is ___.', 'expensive',
+    [['cold', 'Cold — суық; бұл hot сөзінің антонимі.', 'Cold — холодный, антоним к hot.'], ['small', 'Small — кішкентай; антонимі big.', 'Small — маленький; антоним big.'], ['early', 'Early — ерте; антонимі late.', 'Early — рано; антоним late.']],
+    ['Cheap — арзан.', 'Cheap — дешёвый.'], ['Cheap — арзан, expensive — қымбат.', 'Cheap — дешёвый, expensive — дорогой.']);
+  E('en1_uncle', 1, 'en.vocab', 'My mother\'s brother is my ___.', 'uncle',
+    [['cousin', 'Cousin — немере туыс (ағаның не апаның баласы).', 'Cousin — двоюродный брат или сестра.'], ['nephew', 'Nephew — жиен немесе інінің ұлы.', 'Nephew — племянник.'], ['grandfather', 'Grandfather — ата.', 'Grandfather — дедушка.']],
+    ['Анамның ағасы немесе інісі кім болады?', 'Кем приходится брат мамы?'], ['Uncle — нағашы аға (немесе көке). Анамның ағасы — менің uncle.', 'Uncle — дядя. Брат мамы — мой дядя.']);
+  E('en1_week', 1, 'en.vocab', 'There are seven days in a ___.', 'week',
+    [['month', 'Month — ай, онда шамамен 30 күн.', 'Month — месяц, в нём около 30 дней.'], ['year', 'Year — жыл, онда 365 күн.', 'Year — год, в нём 365 дней.'], ['hour', 'Hour — сағат, онда 60 минут.', 'Hour — час, в нём 60 минут.']],
+    ['Жеті күн — бұл ...', 'Семь дней — это ...'], ['Week — апта, онда 7 күн.', 'Week — неделя, в ней 7 дней.']);
+  E('en1_hungry', 1, 'en.vocab', 'I\'m hungry. I want to ___ something.', 'eat',
+    [['sleep', 'Sleep — ұйықтау; шаршағанда ұйықтайды.', 'Sleep — спать; так делают, когда устали.'], ['wear', 'Wear — кию (киім).', 'Wear — носить (одежду).'], ['read', 'Read — оқу.', 'Read — читать.']],
+    ['Hungry — аш.', 'Hungry — голодный.'], ['Hungry — аш, сондықтан бірдеңе жегісі келеді: eat — жеу.', 'Hungry — голодный, поэтому хочется что-то съесть: eat — есть.']);
+  E('en1_goes', 1, 'en.grammar', 'She ___ to school every day.', 'goes',
+    [['go', 'He/she/it кезінде етістікке -s/-es жалғанады.', 'С he/she/it к глаголу добавляется -s/-es.'], ['going', 'Going тек am/is/are-мен бірге келеді.', 'Going употребляется только с am/is/are.'], ['gone', 'Gone — үшінші форма, has/have-пен келеді.', 'Gone — третья форма, нужна с has/have.']],
+    ['«Every day» — күнделікті іс. She — үшінші жақ.', '«Every day» — регулярное действие. She — третье лицо.'], ['Present Simple: she + goes. Go етістігіне -es жалғанады.', 'Present Simple: she + goes. К go добавляется -es.']);
+  E('en1_are', 1, 'en.grammar', 'There ___ two cats in the garden.', 'are',
+    [['is', 'Is — бір затқа (жекеше). Мұнда екі мысық.', 'Is — для одного предмета. Здесь две кошки.'], ['am', 'Am тек I-мен келеді.', 'Am употребляется только с I.'], ['be', 'Be бұл жерде өзгертілуі керек.', 'Be здесь нужно изменить по форме.']],
+    ['Мысық нешеу?', 'Сколько кошек?'], ['Two cats — көпше, сондықтан there are.', 'Two cats — множественное число, поэтому there are.']);
+  E('en1_an', 1, 'en.grammar', 'I have ___ orange.', 'an',
+    [['a', 'Orange дауысты дыбыстан басталады, сондықтан an.', 'Orange начинается с гласного звука, поэтому an.'], ['many', 'Many көпшемен келеді: many oranges.', 'Many — с множественным числом: many oranges.'], ['two', 'Two-дан кейін көпше керек: two oranges.', 'После two нужно множественное число: two oranges.']],
+    ['Сөз дауысты дыбыстан басталады.', 'Слово начинается с гласного звука.'], ['Дауысты дыбыс алдында an қолданылады: an orange.', 'Перед гласным звуком — an: an orange.']);
+  E('en1_do', 1, 'en.grammar', '___ you like football? — Yes, I do.', 'Do',
+    [['Does', 'Does he/she/it-пен келеді.', 'Does — с he/she/it.'], ['Are', 'Are + like деп сұрамайды.', 'С like не спрашивают через are.'], ['Is', 'Is — he/she/it үшін және like-пен келмейді.', 'Is — для he/she/it и не с like.']],
+    ['Жауапқа қараңыз: «Yes, I do».', 'Посмотрите на ответ: «Yes, I do».'], ['You + Present Simple сұрағы: Do you like…?', 'Вопрос в Present Simple с you: Do you like…?']);
+  E('en1_playing', 1, 'en.grammar', 'Look! The children ___ in the park now.', 'are playing',
+    [['play', '«Look! … now» — дәл қазір болып жатқан іс, Present Continuous керек.', '«Look! … now» — действие прямо сейчас, нужен Present Continuous.'], ['plays', 'Children — көпше, -s жалғанбайды.', 'Children — множественное число, -s не нужно.'], ['played', 'Played — өткен шақ.', 'Played — прошедшее время.']],
+    ['«Now» сөзіне назар аударыңыз.', 'Обратите внимание на «now».'], ['Қазір болып жатқан іс: are + playing.', 'Действие сейчас: are + playing.']);
+  E('en1_her', 1, 'en.grammar', 'This is ___ bag. It belongs to my sister.', 'her',
+    [['his', 'His — ер адамға қатысты.', 'His — о мужчине.'], ['she', 'She — «ол», зат есімнің алдында тұрмайды.', 'She — «она», не ставится перед существительным.'], ['them', 'Them — «оларды».', 'Them — «их/им» (объект).']],
+    ['Sister — қыз бала.', 'Sister — девочка.'], ['Тәуелдік: her bag — оның (қыздың) сөмкесі.', 'Притяжательное: her bag — её сумка.']);
+  E('en1_walk', 1, 'en.read', ctx('Dana gets up at 7 o\'clock. She has breakfast and walks to school. Her lessons start at 8:30.') + 'How does Dana get to school?', 'on foot',
+    [['by bus', 'Мәтінде автобус айтылмаған.', 'Об автобусе в тексте нет.'], ['by car', 'Мәтінде көлік айтылмаған.', 'О машине в тексте нет.'], ['by bike', 'Велосипед туралы айтылмаған.', 'О велосипеде нет.']],
+    ['«walks to school» дегенді табыңыз.', 'Найдите «walks to school».'], ['«Walks» — жаяу барады, яғни on foot.', '«Walks» — идёт пешком, то есть on foot.']);
+  E('en1_quiet', 1, 'en.read', ctx('Sign: <b>LIBRARY — Please keep quiet.</b>') + 'What should you do in the library?', 'be quiet',
+    [['run', 'Белгі жүгіру туралы емес.', 'Табличка не о беге.'], ['eat', 'Белгі тамақ туралы емес.', 'Табличка не о еде.'], ['play music', 'Музыка шу шығарады — бұл белгіге қайшы.', 'Музыка шумит — это против таблички.']],
+    ['Quiet — тыныш.', 'Quiet — тихий.'], ['«Keep quiet» — тыныш болыңыз.', '«Keep quiet» — соблюдайте тишину.']);
+  E('en1_pets', 1, 'en.read', ctx('Arman has a cat and two dogs. His sister has a parrot.') + 'How many pets does Arman have?', 'three',
+    [['two', 'Тек иттерді санаған.', 'Посчитали только собак.'], ['four', 'Апасының тотықұсын да қосқан.', 'Добавили попугая сестры.'], ['one', 'Тек мысықты санаған.', 'Посчитали только кошку.']],
+    ['Арманның өз жануарларын санаңыз.', 'Посчитайте животных самого Армана.'], ['1 мысық + 2 ит = 3. Тотықұс — апасының.', '1 кошка + 2 собаки = 3. Попугай — сестры.']);
+  E('en1_fine', 1, 'en.context', 'A: How are you?<br>B: ___', 'I\'m fine, thanks.',
+    [['I\'m 12.', 'Бұл «How old are you?» сұрағына жауап.', 'Это ответ на «How old are you?».'], ['I\'m from Almaty.', 'Бұл «Where are you from?» сұрағына жауап.', 'Это ответ на «Where are you from?».'], ['Yes, I am.', 'Сұрақ «иә/жоқ» сұрағы емес.', 'Это не вопрос «да/нет».']],
+    ['«How are you?» — «Қалайсың?»', '«How are you?» — «Как дела?»'], ['Әдеттегі жауап: «I\'m fine, thanks» — жақсы, рақмет.', 'Обычный ответ: «I\'m fine, thanks» — хорошо, спасибо.']);
+  E('en1_pen', 1, 'en.context', 'A: Can I borrow your pen?<br>B: ___', 'Sure, here you are.',
+    [['No, I\'m not.', '«Can I…?» сұрағына «I\'m not» деп жауап бермейді.', 'На «Can I…?» не отвечают «I\'m not».'], ['It\'s blue.', 'Түсі сұралған жоқ.', 'Цвет не спрашивали.'], ['Thank you very much.', 'Рақметті сұраған адам айтады.', '«Спасибо» говорит тот, кто просил.']],
+    ['Сізден қалам сұрап тұр.', 'У вас просят ручку.'], ['«Sure, here you are» — әрине, мә, ал.', '«Sure, here you are» — конечно, держи.']);
+  E('en1_time', 1, 'en.context', 'A: What time is it?<br>B: ___', 'It\'s half past three.',
+    [['It\'s Monday.', 'Бұл — апта күні, уақыт емес.', 'Это день недели, а не время.'], ['It\'s hot.', 'Бұл — ауа райы.', 'Это о погоде.'], ['For two hours.', 'Бұл «How long?» сұрағына жауап.', 'Это ответ на «How long?».']],
+    ['«What time» — «сағат нешеде».', '«What time» — «который час».'], ['«Half past three» — үш жарым (3:30).', '«Half past three» — половина четвёртого (3:30).']);
+  E('en1_price', 1, 'en.context', 'You want to know the price of a T-shirt. What do you ask?', 'How much is it?',
+    [['How many is it?', 'How many есептелетін заттардың санын сұрайды.', 'How many спрашивает о количестве предметов.'], ['What is it cost?', 'Грамматикалық қате: «What does it cost?» болуы керек.', 'Ошибка: правильно «What does it cost?».'], ['How old is it?', 'Бұл жасы туралы сұрақ.', 'Это вопрос о возрасте.']],
+    ['Баға туралы сұрақ «How much» деп басталады.', 'Вопрос о цене начинается с «How much».'], ['«How much is it?» — бұл қанша тұрады?', '«How much is it?» — сколько это стоит?']);
+  E('en1_welcome', 1, 'en.context', 'A: Thank you for your help!<br>B: ___', 'You\'re welcome.',
+    [['Me too.', '«Me too» — «мен де» деген мағына береді.', '«Me too» значит «я тоже».'], ['I\'m sorry.', 'Кешірім сұрауға себеп жоқ.', 'Извиняться здесь не за что.'], ['Good luck.', 'Бұл — сәттілік тілеу.', 'Это пожелание удачи.']],
+    ['Сізге рақмет айтты. Не деп жауап бересіз?', 'Вас поблагодарили. Что ответить?'], ['«You\'re welcome» — оқасы жоқ.', '«You\'re welcome» — пожалуйста (не за что).']);
+
+  /* Level 2 (≈ A2) */
+  E('en2_went', 2, 'en.grammar', 'Yesterday we ___ to the mountains.', 'went',
+    [['go', '«Yesterday» — өткен шақ белгісі.', '«Yesterday» — признак прошедшего времени.'], ['goes', 'We-мен -es жалғанбайды және шақ қате.', 'С we не добавляется -es, и время неверное.'], ['have gone', 'Present Perfect «yesterday» сөзімен қолданылмайды.', 'Present Perfect не употребляется с «yesterday».']],
+    ['Go — бұрыс етістік.', 'Go — неправильный глагол.'], ['Past Simple: go → went.', 'Past Simple: go → went.']);
+  E('en2_warmer', 2, 'en.grammar', 'In winter, Almaty is ___ than Astana.', 'warmer',
+    [['more warm', 'Қысқа сын есімге -er жалғанады, more қолданылмайды.', 'К короткому прилагательному добавляют -er, more не нужно.'], ['warmest', 'Бұл — ең жоғарғы шырай (the warmest).', 'Это превосходная степень (the warmest).'], ['warm', '«Than» — салыстыру, -er керек.', '«Than» — сравнение, нужен -er.']],
+    ['«Than» сөзі салыстыруды білдіреді.', '«Than» указывает на сравнение.'], ['Салыстырмалы шырай: warm → warmer than.', 'Сравнительная степень: warm → warmer than.']);
+  E('en2_yet', 2, 'en.grammar', 'I ___ my homework yet.', 'haven\'t finished',
+    [['didn\'t finish', '«Yet» Present Perfect-пен келеді.', '«Yet» употребляется с Present Perfect.'], ['don\'t finish', 'Бұл — әдеттегі іс, мағынаға сай емес.', 'Это регулярное действие, по смыслу не подходит.'], ['am not finish', 'Am + етістіктің бастапқы түрі — қате.', 'Am + начальная форма глагола — ошибка.']],
+    ['«Yet» — «әлі».', '«Yet» — «ещё (не)».'], ['Present Perfect: I haven\'t finished … yet.', 'Present Perfect: I haven\'t finished … yet.']);
+  E('en2_any', 2, 'en.grammar', 'There isn\'t ___ milk in the fridge.', 'any',
+    [['some', 'Болымсыз сөйлемде көбіне any қолданылады.', 'В отрицаниях обычно any.'], ['many', 'Milk саналмайды, many қолданылмайды.', 'Milk неисчисляемое, many нельзя.'], ['a', 'Milk саналмайды, a қойылмайды.', 'Milk неисчисляемое, a не ставится.']],
+    ['Сөйлем болымсыз: isn\'t.', 'Предложение отрицательное: isn\'t.'], ['Болымсыз және сұраулы сөйлемде: any.', 'В отрицаниях и вопросах: any.']);
+  E('en2_goodat', 2, 'en.grammar', 'She is good ___ maths.', 'at',
+    [['in', 'Тұрақты тіркес: good at.', 'Устойчивое сочетание: good at.'], ['on', 'Good on деп айтылмайды.', 'Good on так не говорят.'], ['for', 'Good for — «пайдалы» деген мағына.', 'Good for — «полезен для».']],
+    ['Тұрақты тіркесті еске түсіріңіз.', 'Вспомните устойчивое сочетание.'], ['Good at something — бір нәрсеге жақсы, қабілетті.', 'Good at something — хорошо уметь что-то.']);
+  E('en2_many', 2, 'en.grammar', 'How ___ apples do you need?', 'many',
+    [['much', 'Much саналмайтын заттарға (water, milk).', 'Much — для неисчисляемых (water, milk).'], ['lot', '«How lot» деген тіркес жоқ.', 'Сочетания «how lot» нет.'], ['any', '«How any» деп сұрамайды.', 'Так не спрашивают.']],
+    ['Apples — саналатын, көпше.', 'Apples — исчисляемое, множественное.'], ['Саналатын заттар үшін: How many…?', 'Для исчисляемых: How many…?']);
+  E('en2_stay', 2, 'en.grammar', 'If it rains tomorrow, we ___ at home.', 'will stay',
+    [['stayed', 'Бұл — өткен шақ, ал «tomorrow» — келер шақ.', 'Это прошедшее время, а «tomorrow» — будущее.'], ['would stayed', 'Would-дан кейін етістіктің бастапқы түрі келеді.', 'После would — начальная форма глагола.'], ['staying', 'Көмекші етістік жоқ.', 'Нет вспомогательного глагола.']],
+    ['Бірінші шартты сөйлем: if + Present, … will + етістік.', 'Первый тип условия: if + Present, … will + глагол.'], ['If it rains, we will stay — нақты болашақ жағдай.', 'If it rains, we will stay — реальное будущее.']);
+  E('en2_visit', 2, 'en.vocab', 'The museum is closed on Mondays, so we can\'t ___ it today.', 'visit',
+    [['close', 'Музейді біз жаппаймыз — ол жабық.', 'Музей закрываем не мы — он закрыт.'], ['build', 'Build — салу, мағынаға сай емес.', 'Build — строить, по смыслу не подходит.'], ['forget', 'Forget — ұмыту, логикаға сай емес.', 'Forget — забыть, нелогично.']],
+    ['Мұражай жабық болса, не істей алмаймыз?', 'Что нельзя сделать, если музей закрыт?'], ['Visit — бару, қонаққа бару: мұражай жабық, сондықтан бара алмаймыз.', 'Visit — посетить: музей закрыт, поэтому посетить нельзя.']);
+  E('en2_author', 2, 'en.vocab', 'A person who writes books is an ___.', 'author',
+    [['actor', 'Actor — актер.', 'Actor — актёр.'], ['athlete', 'Athlete — спортшы.', 'Athlete — спортсмен.'], ['engineer', 'Engineer — инженер.', 'Engineer — инженер.']],
+    ['Кітап жазатын адам кім?', 'Кто пишет книги?'], ['Author — автор, жазушы.', 'Author — автор, писатель.']);
+  E('en2_huge', 2, 'en.vocab', '<b>Huge</b> means very ___.', 'big',
+    [['small', 'Бұл — қарама-қарсы мағына.', 'Это противоположное значение.'], ['fast', 'Fast — жылдам.', 'Fast — быстрый.'], ['old', 'Old — ескі, кәрі.', 'Old — старый.']],
+    ['Мысалы: a huge elephant.', 'Например: a huge elephant.'], ['Huge — өте үлкен, алып.', 'Huge — огромный.']);
+  E('en2_kind', 2, 'en.vocab', 'My brother is very ___: he always helps other people.', 'kind',
+    [['lazy', 'Lazy — жалқау; ол көмектеспейді.', 'Lazy — ленивый; он не помогает.'], ['rude', 'Rude — дөрекі.', 'Rude — грубый.'], ['noisy', 'Noisy — шулы, мағынаға байланысы жоқ.', 'Noisy — шумный, не по смыслу.']],
+    ['Екінші бөлімі түсіндіреді: «әрқашан көмектеседі».', 'Вторая часть объясняет: «всегда помогает».'], ['Kind — мейірімді.', 'Kind — добрый.']);
+  E('en2_getoff', 2, 'en.vocab', 'We need to ___ the bus at the next stop.', 'get off',
+    [['get up', 'Get up — төсектен тұру.', 'Get up — вставать (с кровати).'], ['take off', 'Take off — шешу (киім) немесе ұшу.', 'Take off — снимать (одежду) или взлетать.'], ['turn off', 'Turn off — сөндіру (жарық).', 'Turn off — выключать (свет).']],
+    ['Аялдамада автобустан ...', 'На остановке из автобуса ...'], ['Get off the bus — автобустан түсу.', 'Get off the bus — выйти из автобуса.']);
+  E('en2_pool', 2, 'en.read', ctx('<b>Swimming pool:</b> open 9:00–18:00. Children under 10 must swim with an adult.') + 'Ali is 9. What must he do?', 'swim with an adult',
+    [['swim after 18:00', 'Бассейн 18:00-де жабылады.', 'Бассейн закрывается в 18:00.'], ['pay more', 'Баға туралы ақпарат жоқ.', 'О цене ничего нет.'], ['stay at home', 'Бұл ережеде айтылмаған.', 'Этого в правиле нет.']],
+    ['«Under 10» — 10 жасқа дейін.', '«Under 10» — младше 10 лет.'], ['Әлиге 9 жас, яғни 10-нан кіші: ересекпен жүзуі керек.', 'Али 9 лет, это меньше 10: он должен плавать со взрослым.']);
+  E('en2_hot', 2, 'en.read', ctx('Last summer Madina visited her grandmother in Shymkent. It was very hot, so they went to the park only in the evenings.') + 'Why did they go to the park only in the evenings?', 'It was too hot during the day.',
+    [['The park was closed in the morning.', 'Мәтінде бұлай айтылмаған.', 'В тексте этого нет.'], ['Grandmother worked all day.', 'Мәтінде әжесінің жұмысы туралы жоқ.', 'О работе бабушки нет.'], ['It rained every day.', 'Мәтін керісінше: ыстық болды.', 'Наоборот: было жарко.']],
+    ['«So» сөзінің алдында себеп тұр.', 'Перед «so» стоит причина.'], ['«It was very hot, so…» — ыстық болғандықтан кешке шыққан.', '«It was very hot, so…» — было жарко, поэтому ходили вечером.']);
+  E('en2_coach', 2, 'en.read', ctx('Hi Timur! The football match is moved from Saturday to Sunday, 4 pm. Bring water. — Coach') + 'What has changed?', 'the day of the match',
+    [['the place of the match', 'Орын туралы айтылмаған.', 'О месте ничего не сказано.'], ['the team', 'Команда туралы айтылмаған.', 'О команде не сказано.'], ['only the time', 'Хабарламада күні ауысты: Saturday → Sunday.', 'В сообщении меняется день: Saturday → Sunday.']],
+    ['«moved from … to …» тіркесін табыңыз.', 'Найдите «moved from … to …».'], ['Матч сенбіден жексенбіге ауыстырылды — өзгерген күні.', 'Матч перенесли с субботы на воскресенье — изменился день.']);
+  E('en2_rainy', 2, 'en.read', ctx('Aigerim forgot her umbrella, so she got wet.') + 'What was the weather like?', 'rainy',
+    [['sunny', 'Күн ашық болса, қолшатырсыз су болмас еді.', 'В солнечную погоду без зонта не промокнешь.'], ['hot', 'Ыстықтан қолшатыр қорғамайды деген ой мәтінде жоқ.', 'Из текста это не следует.'], ['dry', 'Dry — құрғақ; ол су болды.', 'Dry — сухо; а она промокла.']],
+    ['Қолшатыр не үшін керек?', 'Зачем нужен зонт?'], ['Қолшатыр жаңбырдан қорғайды; ол су болды — жаңбыр жауған.', 'Зонт защищает от дождя; она промокла — шёл дождь.']);
+  E('en2_please', 2, 'en.context', 'A: Would you like some tea?<br>B: ___', 'Yes, please.',
+    [['Yes, I like.', 'Like-тан кейін толықтауыш керек: «I like it». Ұсынысқа «Yes, please» деп жауап береді.', 'После like нужно дополнение. На предложение отвечают «Yes, please».'], ['Yes, I am.', '«Would you…?» сұрағына «I am» деп жауап бермейді.', 'На «Would you…?» не отвечают «I am».'], ['Yes, it is.', 'Сұрақ шайдың өзі туралы емес.', 'Вопрос не о самом чае.']],
+    ['Сізге шай ұсынып тұр.', 'Вам предлагают чай.'], ['Ұсынысқа келісу: «Yes, please».', 'Согласие на предложение: «Yes, please».']);
+  E('en2_keys', 2, 'en.context', 'A: I\'ve lost my keys!<br>B: ___', 'Oh no! Where did you last see them?',
+    [['Congratulations!', 'Бұл — құттықтау, жағдайға сай емес.', 'Это поздравление, не к месту.'], ['Yes, they are.', 'Бұл жауап мағынасыз.', 'Этот ответ не имеет смысла.'], ['Me neither.', '«Me neither» — болымсыз сөйлемге «мен де» деп келісу.', '«Me neither» — согласие с отрицанием.']],
+    ['Досыңыздың басына қиындық түсті.', 'У друга неприятность.'], ['Жанашырлық пен көмек: «Oh no! Where did you last see them?»', 'Сочувствие и помощь: «Oh no! Where did you last see them?»']);
+  E('en2_repeat', 2, 'en.context', 'You didn\'t understand the teacher. What do you say?', 'Could you repeat that, please?',
+    [['Repeat you!', 'Бұл — дөрекі әрі қате.', 'Грубо и неправильно.'], ['Do you repeat?', 'Бұл «Сіз қайталайсыз ба (әдетте)?» деген мағына.', 'Это значит «Вы повторяете (обычно)?».'], ['I repeat, please.', 'Мұнда сіз емес, мұғалім қайталауы керек.', 'Повторить должен учитель, а не вы.']],
+    ['Сыпайы өтініш «Could you…» деп басталады.', 'Вежливая просьба начинается с «Could you…».'], ['«Could you repeat that, please?» — қайталап жібересіз бе?', '«Could you repeat that, please?» — не могли бы вы повторить?']);
+  E('en2_cinema', 2, 'en.context', 'A: Let\'s go to the cinema!<br>B: ___', 'Good idea! What\'s on?',
+    [['Yes, I went.', 'Бұл — өткен шақ, ұсынысқа сай емес.', 'Это прошедшее время, не подходит.'], ['I\'m agree.', 'Қате: «I agree» болуы керек.', 'Ошибка: правильно «I agree».'], ['It\'s a cinema.', 'Бұл ұсынысқа жауап емес.', 'Это не ответ на предложение.']],
+    ['Досыңыз ұсыныс айтты.', 'Друг что-то предлагает.'], ['Келісу және сұрақ: «Good idea! What\'s on?» — не көрсетіп жатыр?', 'Согласие и вопрос: «Good idea! What\'s on?» — что идёт?']);
+  E('en2_shop', 2, 'en.context', 'In a shop.<br>A: Can I help you?<br>B: ___', 'I\'m just looking, thanks.',
+    [['Yes, you can help you.', 'Қате: «you» екі рет қайталанды.', 'Ошибка: «you» дважды.'], ['I\'m looking just.', 'Сөздердің реті қате.', 'Неверный порядок слов.'], ['No, I can\'t.', 'Сұрақ сатушының көмегі туралы еді.', 'Спрашивали, нужна ли помощь продавца.']],
+    ['Сатушы көмек ұсынып тұр.', 'Продавец предлагает помощь.'], ['«I\'m just looking, thanks» — жай қарап жүрмін, рақмет.', '«I\'m just looking, thanks» — я просто смотрю, спасибо.']);
+
+  /* Level 3 (≈ B1) */
+  E('en3_had', 3, 'en.grammar', 'By the time we arrived, the film ___.', 'had already started',
+    [['has already started', 'Өткен оқиғадан бұрын болған іс — Past Perfect керек.', 'Действие раньше другого прошедшего — нужен Past Perfect.'], ['already starts', 'Бұл — осы шақ.', 'Это настоящее время.'], ['was already start', 'Was + етістіктің бастапқы түрі — қате.', 'Was + начальная форма — ошибка.']],
+    ['Қай оқиға бірінші болды: келу ме, әлде фильмнің басталуы ма?', 'Что было раньше: приход или начало фильма?'], ['Фильм біз келгенге дейін басталды: had + V3 (Past Perfect).', 'Фильм начался до нашего прихода: had + V3 (Past Perfect).']);
+  E('en3_built', 3, 'en.grammar', 'This bridge ___ in 1975.', 'was built',
+    [['built', 'Көпір өзін-өзі салған жоқ — ырықсыз етіс керек.', 'Мост не строил сам себя — нужен пассив.'], ['is building', 'Бұл — қазір болып жатқан іс.', 'Это действие сейчас.'], ['has built', 'Бұл — белсенді етіс және жыл көрсетілгенде қолданылмайды.', 'Это активный залог, и с годом не употребляется.']],
+    ['Көпірді біреу салды. Көпір — іс-әрекеттің объектісі.', 'Мост построили. Мост — объект действия.'], ['Passive, Past Simple: was + built.', 'Пассив в Past Simple: was + built.']);
+  E('en3_lived', 3, 'en.grammar', 'She asked me where ___.', 'I lived',
+    [['did I live', 'Төлеу сөзде сөз реті сұраулы емес.', 'В косвенной речи порядок слов не вопросительный.'], ['do I live', 'Сөз реті де, шақ та қате.', 'Неверны и порядок слов, и время.'], ['lived I', 'Сөз реті қате.', 'Неверный порядок слов.']],
+    ['Бұл — сұраудың өзі емес, ол туралы хабар (төлеу сөз).', 'Это не сам вопрос, а пересказ (косвенная речь).'], ['Asked … where I lived: бастауыш + етістік, шақ бір саты артқа.', 'Asked … where I lived: подлежащее + глагол, время сдвигается назад.']);
+  E('en3_haveto', 3, 'en.grammar', 'You ___ wear a uniform at our school — it\'s a rule.', 'have to',
+    [['don\'t have to', 'Бұл «міндетті емес» дегенді білдіреді, ал бұл — ереже.', 'Это значит «не обязательно», а это правило.'], ['might', 'Might — «мүмкін», міндет емес.', 'Might — «может быть», не обязанность.'], ['shouldn\'t', 'Бұл — «керек емес» деген кеңес.', 'Это совет «не стоит».']],
+    ['«It\'s a rule» — ереже.', '«It\'s a rule» — правило.'], ['Ережеге байланысты міндет: have to.', 'Обязанность по правилу: have to.']);
+  E('en3_forward', 3, 'en.grammar', 'I\'m looking forward ___ you.', 'to seeing',
+    [['to see', '«Look forward to» тіркесінде to — предлог, одан кейін -ing келеді.', 'В «look forward to» to — предлог, после него -ing.'], ['seeing', 'To жетіспейді.', 'Не хватает to.'], ['for seeing', 'Тіркес for-мен емес, to-мен келеді.', 'Сочетание с to, а не for.']],
+    ['Тұрақты тіркес: look forward to …', 'Устойчивое: look forward to …'], ['Look forward to + -ing: to seeing you.', 'Look forward to + -ing: to seeing you.']);
+  E('en3_had2', 3, 'en.grammar', 'If I ___ more free time, I would learn Japanese.', 'had',
+    [['have', 'Шындыққа сай емес жағдай (would) — Past Simple керек.', 'Нереальное условие (would) — нужен Past Simple.'], ['will have', 'If бөлігінде will қолданылмайды.', 'В части с if will не используется.'], ['would have', 'If бөлігінде would қойылмайды.', 'В части с if would не ставится.']],
+    ['Екінші бөлікте «would» тұр.', 'Во второй части стоит «would».'], ['Екінші тип: If + Past Simple, … would + етістік.', 'Второй тип: If + Past Simple, … would + глагол.']);
+  E('en3_discovery', 3, 'en.vocab', 'The scientist\'s ___ changed how we understand the brain.', 'discovery',
+    [['discover', 'Бұл — етістік, ал мұнда зат есім керек.', 'Это глагол, а нужно существительное.'], ['discovered', 'Бұл — өткен шақ етістігі.', 'Это глагол в прошедшем.'], ['discovering', 'The scientist\'s-тен кейін зат есім жақсы келеді.', 'После the scientist\'s нужно существительное.']],
+    ['«The scientist\'s ___» — ғалымның … (зат есім).', '«The scientist\'s ___» — … учёного (существительное).'], ['Discovery — ашылым (зат есім).', 'Discovery — открытие (существительное).']);
+  E('en3_reluctant', 3, 'en.vocab', 'Choose the closest meaning:<br><b>He was reluctant to answer.</b>', 'He did not want to answer.',
+    [['He answered quickly.', 'Reluctant — керісінше, құлықсыз.', 'Reluctant — наоборот, неохотно.'], ['He could not hear.', 'Есту туралы айтылмаған.', 'О слухе нет речи.'], ['He answered correctly.', 'Жауаптың дұрыстығы туралы емес.', 'Не о правильности ответа.']],
+    ['Reluctant — ынтасыз, құлықсыз.', 'Reluctant — неохотный.'], ['Reluctant to do — бір нәрсені істегісі келмеу.', 'Reluctant to do — не хотеть что-то делать.']);
+  E('en3_nocturnal', 3, 'en.vocab', 'Many steppe animals are ___ — you can see them mostly at night.', 'nocturnal',
+    [['domestic', 'Domestic — үй жануарлары.', 'Domestic — домашние.'], ['aquatic', 'Aquatic — суда тіршілік ететін.', 'Aquatic — водные.'], ['extinct', 'Extinct — жойылып кеткен.', 'Extinct — вымершие.']],
+    ['Тире түсіндірмесін оқыңыз: «at night».', 'Прочитайте пояснение после тире: «at night».'], ['Nocturnal — түнде белсенді.', 'Nocturnal — ночной (активный ночью).']);
+  E('en3_up', 3, 'en.vocab', 'The price went ___ from 500 to 650 tenge.', 'up',
+    [['down', 'Баға өсті, азайған жоқ.', 'Цена выросла, а не упала.'], ['off', 'Went off — басқа мағына (шулау, бұзылу).', 'Went off — другое значение.'], ['out', 'Went out — сыртқа шықты, сөнді.', 'Went out — вышел, погас.']],
+    ['500 → 650: өсті ме, кеміді ме?', '500 → 650: выросла или упала?'], ['Go up — өсу, көтерілу.', 'Go up — расти, подниматься.']);
+  E('en3_make', 3, 'en.vocab', 'Please don\'t ___ noise — the baby is sleeping.', 'make',
+    [['do', 'Тұрақты тіркес: make a noise, do емес.', 'Устойчиво: make noise, а не do.'], ['take', 'Take noise деп айтылмайды.', 'Так не говорят.'], ['have', 'Have noise деп айтылмайды.', 'Так не говорят.']],
+    ['Make немесе do — тұрақты тіркестер.', 'Make или do — устойчивые сочетания.'], ['Make (a) noise — шу шығару.', 'Make (a) noise — шуметь.']);
+  E('en3_were', 3, 'en.grammar', 'Neither Aliya nor her brothers ___ at home yesterday.', 'were',
+    [['was', 'Neither … nor кезінде етістік жақын тұрған сөзге (brothers — көпше) сәйкеседі.', 'При neither … nor глагол согласуется с ближайшим словом (brothers — мн. ч.).'], ['is', 'Yesterday — өткен шақ.', 'Yesterday — прошедшее время.'], ['be', 'Етістік өзгертілмеген.', 'Глагол не изменён.']],
+    ['Етістікке ең жақын сөз қайсы?', 'Какое слово ближе к глаголу?'], ['Жақын сөз — brothers (көпше), өткен шақ: were.', 'Ближайшее — brothers (мн. ч.), прошедшее: were.']);
+  E('en3_saiga', 3, 'en.read', ctx('Saiga antelopes live in the steppes of Kazakhstan. In 2015 a disease killed many of them, but thanks to protection their number has grown again.') + 'What is the main idea?', 'Saiga numbers fell sharply but recovered thanks to protection.',
+    [['Saigas live only in zoos.', 'Мәтінде дала туралы айтылған.', 'В тексте — о степи.'], ['Saigas spread diseases.', 'Мәтінде ауру ақбөкендерді өлтірді, керісінше емес.', 'Болезнь погубила сайгаков, а не наоборот.'], ['There are no saigas left.', '«Has grown again» — саны қайта өсті.', '«Has grown again» — число снова выросло.']],
+    ['Мәтіннің басы мен соңын салыстырыңыз.', 'Сравните начало и конец текста.'], ['Саны күрт азайды, бірақ қорғаудың арқасында қайта өсті.', 'Численность резко упала, но благодаря охране восстановилась.']);
+  E('en3_practised', 3, 'en.read', ctx('Although the test was difficult, most students passed because they had practised every day.') + 'Why did most students pass?', 'They had practised regularly.',
+    [['The test was easy.', '«Although the test was difficult» — тест қиын болды.', '«Although the test was difficult» — тест был трудным.'], ['The teacher helped them during the test.', 'Мәтінде бұлай айтылмаған.', 'В тексте этого нет.'], ['Only a few students took it.', 'Мәтінде «most students» деп айтылған.', 'В тексте — «most students».']],
+    ['«Because» сөзінен кейінгі бөлікті оқыңыз.', 'Прочитайте часть после «because».'], ['Себебі: «they had practised every day» — күн сайын жаттыққан.', 'Причина: «they had practised every day» — тренировались каждый день.']);
+  E('en3_party', 3, 'en.read', ctx('I\'m afraid I can\'t come to your party on Friday. My cousins are visiting us that weekend. Hope you have a great time!') + 'What is the purpose of this message?', 'to politely refuse an invitation',
+    [['to invite a friend to a party', 'Жазушы өзі шақырмайды, бас тартады.', 'Автор не приглашает, а отказывается.'], ['to complain about the cousins', 'Шағым жоқ, тек себебі айтылған.', 'Жалобы нет, только причина.'], ['to ask for help', 'Көмек сұралмайды.', 'Помощь не просят.']],
+    ['«I\'m afraid I can\'t come» — нені білдіреді?', '«I\'m afraid I can\'t come» — что это значит?'], ['Бұл — сыпайы бас тарту: келе алмайтынын айтып, себебін түсіндіреді.', 'Это вежливый отказ: говорит, что не придёт, и объясняет почему.']);
+  E('en3_calc', 3, 'en.read', ctx('<b>Exam rules:</b> Phones must be switched off. Calculators are not allowed unless the teacher says otherwise.') + 'When can a student use a calculator?', 'only if the teacher allows it',
+    [['always', 'Ереже бойынша калькуляторға рұқсат жоқ.', 'По правилам калькулятор запрещён.'], ['never, in any case', '«Unless the teacher says otherwise» — мұғалім рұқсат етсе болады.', '«Unless…» — можно, если разрешит учитель.'], ['when the phone is off', 'Телефон калькуляторға рұқсат бермейді.', 'Выключенный телефон не даёт права на калькулятор.']],
+    ['«Unless» — «егер … болмаса».', '«Unless» — «если только не».'], ['Unless the teacher says otherwise = мұғалім басқаша айтпаса. Яғни тек рұқсатпен.', 'Unless the teacher says otherwise = если учитель не скажет иначе. Значит, только с разрешения.']);
+  E('en3_mind', 3, 'en.context', 'A: Do you mind if I open the window?<br>B (you agree): ___', 'Not at all. Go ahead.',
+    [['Yes, I mind. Go ahead.', '«Yes, I mind» — қарсымын дегенді білдіреді, бұл келісім емес.', '«Yes, I mind» значит «я против», это не согласие.'], ['No, I do.', 'Бұл жауап өзіне-өзі қайшы.', 'Ответ противоречит сам себе.'], ['Yes, please don\'t.', 'Бұл — бас тарту.', 'Это отказ.']],
+    ['«Do you mind…?» — «Қарсы емессіз бе?»', '«Do you mind…?» — «Вы не против?»'], ['Келісу: «Not at all» — мүлде қарсы емеспін.', 'Согласие: «Not at all» — совсем не против.']);
+  E('en3_welldone', 3, 'en.context', 'Your friend won a competition. What do you say?', 'Well done! You deserve it.',
+    [['Never mind, next time.', 'Бұл — жеңілгенде айтылатын жұбату.', 'Это утешение после проигрыша.'], ['Bless you!', 'Мұны түшкіргенде айтады.', 'Так говорят, когда чихают.'], ['Excuse me.', 'Бұл — кешірім сұрау немесе назар аудару.', 'Это извинение или привлечение внимания.']],
+    ['Досыңыз жеңді — құттықтаңыз.', 'Друг победил — поздравьте.'], ['«Well done! You deserve it» — жарайсың, лайықтысың.', '«Well done! You deserve it» — молодец, ты это заслужил.']);
+  E('en3_disagree', 3, 'en.context', 'A: We should leave early to avoid traffic.<br>B (you disagree politely): ___', 'I see your point, but the roads are usually empty in the morning.',
+    [['You\'re absolutely right.', 'Бұл — келісу.', 'Это согласие.'], ['No way, that\'s stupid.', 'Бұл — дөрекі қарсылық.', 'Это грубое несогласие.'], ['I don\'t care.', 'Бұл — немқұрайдылық, сыпайы пікір емес.', 'Это равнодушие, а не вежливое мнение.']],
+    ['Сыпайы қарсылық: алдымен пікірді мойындау, кейін «but».', 'Вежливое несогласие: признать мнение, потом «but».'], ['«I see your point, but…» — түсінемін, бірақ…', '«I see your point, but…» — понимаю, но…']);
+
+  /* ---------- ҚАЗАҚ ТІЛІ: қысқа тапсырмалар (толығымен қазақша) ---------- */
+  var K = function (id, k, d, q, a, w, h, e) { S(id, 'kk', 'kkmini', k, d, { fixed: 'kk', q: q, a: a, w: w, h: h, e: e }); };
+  K('kk_batyl', 'kk.vocab', 1, '«Батыл» сөзіне мағынасы жақын сөзді табыңыз.', 'ер жүрек',
+    [['қорқақ', 'Бұл — «батыл» сөзінің антонимі.'], ['жалқау', 'Жалқау — еріншек, мағынасы басқа.'], ['сараң', 'Сараң — қолы ашық емес адам.']],
+    'Синоним — мағынасы жақын сөз.', '«Батыл» мен «ер жүрек» — синонимдер: екеуі де қорықпайтын адамды сипаттайды.');
+  K('kk_ystyq', 'kk.vocab', 1, '«Ыстық» сөзінің антонимін табыңыз.', 'суық',
+    [['жылы', 'Жылы — «ыстыққа» жақын, қарама-қарсы емес.'], ['жарық', 'Жарық — «қараңғы» сөзінің антонимі.'], ['ащы', 'Ащы — «тәтті» сөзінің антонимі.']],
+    'Антоним — қарама-қарсы мағыналы сөз.', '«Ыстық» — «суық»: қарама-қарсы мағыналы сөздер.');
+  K('kk_septik', 'kk.grammar', 2, 'Сөйлемді толықтырыңыз: «Кеше мен ___ бардым».', 'кітапханаға',
+    [['кітапханада', 'Жатыс септік «қайда?» (орын) — «бардым» етістігіне сай емес.'], ['кітапханадан', 'Шығыс септік «қайдан?» — бағыт керісінше.'], ['кітапхананың', 'Ілік септік «нені?/кімнің?» — етістікпен байланыспайды.']],
+    '«Бардым» етістігі «қайда?» (қай жаққа?) сұрағын талап етеді.', 'Барыс септік (-ға/-ге, -қа/-ке) бағытты білдіреді: кітапханаға бардым.');
+  K('kk_maqal', 'kk.meaning', 2, '«Тамшыдан теңіз құралады» мақалының мағынасы қандай?', 'Кішкентай істер жиналып, үлкен нәтиже береді.',
+    [['Теңіз суы тамшылардан тұрады деген ғылыми дерек.', 'Мақалдың ауыспалы мағынасы бар, ол тек табиғат туралы емес.'], ['Суды үнемдеу керек.', 'Мақал үнемдеу туралы емес.'], ['Теңізге бару қауіпті.', 'Бұл мақал мағынасына қатысы жоқ.']],
+    'Мақалдың ауыспалы мағынасын іздеңіз.', 'Аз-аздан жиналған еңбек үлкен нәтижеге айналады — бұл мақалдың ауыспалы мағынасы.');
+  K('kk_emle', 'kk.spell', 1, 'Дұрыс жазылған сөзді табыңыз.', 'мұғалім',
+    [['мұгалім', '«Ғ» әрпі «г» болып жазылған.'], ['мұғалым', 'Соңғы буында «і» болуы керек.'], ['мугалім', '«Ұ» мен «ғ» әріптері қате жазылған.']],
+    'Қазақ тіліне тән әріптерге назар аударыңыз.', 'Дұрыс жазылуы: мұғалім.');
+  K('kk_kelershaq', 'kk.grammar', 2, '— Ертең не істейсің?<br>— Ертең мен кітап ___.', 'оқимын',
+    [['оқыдым', 'Бұл — өткен шақ, ал «ертең» келер шақты білдіреді.'], ['оқыппын', 'Бұл — бұрынғы өткен шақ.'], ['оқыған едім', 'Бұл да өткен шақ.']],
+    '«Ертең» — келер шақтың белгісі.', 'Ауыспалы келер шақ: оқ + и + мын → оқимын.');
+  K('kk_bastauysh', 'kk.grammar', 2, '«Кеше біздің сынып мұражайға барды» сөйлеміндегі бастауышты табыңыз.', 'сынып',
+    [['кеше', 'Бұл — пысықтауыш («қашан?»).'], ['мұражайға', 'Бұл — толықтауыш немесе пысықтауыш («қайда?»).'], ['барды', 'Бұл — баяндауыш.']],
+    'Бастауыш «кім? не?» сұрағына жауап береді.', 'Мұражайға не барды? — сынып. Бастауыш: сынып.');
+  K('kk_tirkes', 'kk.meaning', 2, '«Көз ашып-жұмғанша» тіркесінің мағынасы қандай?', 'өте тез',
+    [['ұзақ уақыт', 'Тіркес керісінше өте қысқа уақытты білдіреді.'], ['ұйықтап жатып', 'Тіркестің тура мағынасы емес, ауыспалы мағынасы алынады.'], ['көзін жұмып', 'Бұл — сөзбе-сөз түсіну.']],
+    'Көзді ашып-жұмуға қанша уақыт кетеді?', 'Тұрақты тіркес: көз ашып-жұмғанша — қас қағым сәтте, өте тез.');
+  K('kk_oqu', 'kk.read', 1, '«Әсет сабақтан кейін алдымен үй тапсырмасын орындады, содан кейін доп ойнауға шықты».<br>Әсет доп ойнауға қашан шықты?', 'Үй тапсырмасын орындағаннан кейін',
+    [['Сабаққа дейін', 'Мәтінде «сабақтан кейін» деп айтылған.'], ['Үй тапсырмасын орындамай', '«Алдымен үй тапсырмасын орындады» деп айтылған.'], ['Сабақ кезінде', 'Мәтінде бұлай айтылмаған.']],
+    '«Алдымен» және «содан кейін» сөздеріне назар аударыңыз.', 'Алдымен — үй тапсырмасы, содан кейін — доп ойнау.');
+  K('kk_koptik', 'kk.grammar', 2, 'Көптік жалғауы дұрыс жалғанған сөзді табыңыз.', 'дәптерлер',
+    [['дәптерләр', 'Қазақ тілінде «-ләр» жалғауы жоқ.'], ['дәптерлар', 'Жіңішке буыннан кейін жіңішке жалғау (-лер) жалғанады.'], ['дәптердер', '«Р» дыбысынан кейін -лар/-лер жалғанады.']],
+    'Соңғы дыбыс пен буынның жуан-жіңішкелігіне қараңыз.', '«Дәптер» — жіңішке сөз, «р»-ға аяқталады, сондықтан -лер: дәптерлер.');
+  K('kk_suraq', 'kk.grammar', 1, 'Сұраулы сөйлемді табыңыз.', 'Сен ертең театрға барасың ба?',
+    [['Ертең театрға барамыз.', 'Бұл — хабарлы сөйлем.'], ['Театрға барайық!', 'Бұл — бұйрықты (ұсыныс) сөйлем.'], ['Театр қандай әдемі!', 'Бұл — лепті сөйлем.']],
+    'Сұраулы сөйлемде сұраулық шылау (ма/ме, ба/бе, па/пе) немесе сұрау есімдігі болады.', '«Барасың ба?» — сұраулық шылау «ба» бар, соңында сұрақ белгісі.');
+  K('kk_tubir', 'kk.vocab', 2, '«Еңбек» сөзімен түбірлес сөзді табыңыз.', 'еңбекқор',
+    [['ерік', 'Түбірі басқа.'], ['елік', 'Түбірі басқа.'], ['ертегі', 'Түбірі басқа.']],
+    'Түбірлес сөздердің түбірі бірдей.', 'Еңбек + қор → еңбекқор: түбірі «еңбек».');
+  K('kk_synonym', 'kk.vocab', 1, 'Синонимдер жұбын табыңыз.', 'әдемі — көркем',
+    [['үлкен — кіші', 'Бұл — антонимдер.'], ['жылдам — баяу', 'Бұл — антонимдер.'], ['ақ — қара', 'Бұл — антонимдер.']],
+    'Синонимдердің мағынасы жақын болады.', '«Әдемі» мен «көркем» — мағынасы жақын сөздер.');
+  K('kk_xabar', 'kk.read', 1, 'Хабарландыру: «Ертең сағат 10:00-де мектеп ауласында ағаш отырғызу акциясы өтеді. Қолғап алып келіңіздер».<br>Оқушылар не алып келуі керек?', 'қолғап',
+    [['ағаш көшеті', 'Хабарландыруда көшет алып келу туралы айтылмаған.'], ['күрек', 'Күрек туралы айтылмаған.'], ['су', 'Су туралы айтылмаған.']],
+    'Соңғы сөйлемді оқыңыз.', '«Қолғап алып келіңіздер» — оқушылар қолғап алып келуі керек.');
+
+  /* ---------- РУССКИЙ ЯЗЫК: короткие задания (полностью на русском) ---------- */
+  var R = function (id, k, d, q, a, w, h, e) { S(id, 'ru', 'rumini', k, d, { fixed: 'ru', q: q, a: a, w: w, h: h, e: e }); };
+  R('ru_solnce', 'ru.spell', 1, 'Найдите слово, написанное с ошибкой.', 'сонце',
+    [['лестница', 'Написано верно, это словарное слово.'], ['чувство', 'Написано верно: в «чувство» первая «в» не произносится.'], ['праздник', 'Написано верно: «праздный» — проверочное слово.']],
+    'В одном слове пропущена непроизносимая согласная.', 'Правильно: «солнце» (проверочное слово «солнышко»).');
+  R('ru_tsya', 'ru.grammar', 2, 'Вставьте пропущенное: «Он хорошо уч…ся».', 'учится',
+    [['учиться', 'Что делает? — учится (без «ь»). «Учиться» отвечает на вопрос «что делать?».'], ['учица', 'Возвратный глагол сохраняет «-ся».'], ['учитса', 'Сочетание «тс» здесь не пишется.']],
+    'Задайте вопрос к глаголу: что делает? или что делать?', 'Он что делает? — учится. Без «ь».');
+  R('ru_antonym', 'ru.vocab', 1, 'Подберите антоним к слову «смелый».', 'трусливый',
+    [['храбрый', 'Это синоним, а не антоним.'], ['быстрый', 'Не противоположное по смыслу.'], ['весёлый', 'Не противоположное по смыслу.']],
+    'Антоним — слово с противоположным значением.', '«Смелый» — «трусливый».');
+  R('ru_baklushi', 'ru.meaning', 2, 'Что значит выражение «бить баклуши»?', 'бездельничать',
+    [['драться', 'Это буквальное понимание; фразеологизм значит другое.'], ['много работать', 'Наоборот.'], ['играть в мяч', 'Не связано по смыслу.']],
+    'Это фразеологизм — его значение не складывается из отдельных слов.', '«Бить баклуши» — бездельничать.');
+  R('ru_comma', 'ru.punct', 2, 'В каком предложении нужна запятая?', 'Я хотел пойти гулять но начался дождь.',
+    [['Мы пошли в парк и катались на велосипедах.', 'Однородные сказуемые с одиночным «и» запятой не разделяются.'], ['Мама купила хлеб и молоко.', 'Однородные члены с одиночным «и» — без запятой.'], ['Дети громко смеялись в коридоре.', 'Простое предложение, запятая не нужна.']],
+    'Ищите противительный союз «но».', 'Перед союзом «но» ставится запятая: «…гулять, но начался дождь».');
+  R('ru_padezh', 'ru.grammar', 2, 'В каком падеже стоит слово «другу» в предложении «Я подарил книгу другу»?', 'в дательном',
+    [['в родительном', 'Родительный отвечает на вопрос «кого? чего?» — «друга».'], ['в винительном', 'Винительный — «кого? что?»: здесь это «книгу».'], ['в предложном', 'Предложный — «о ком? о чём?».']],
+    'Задайте вопрос: подарил кому?', 'Подарил кому? — другу. Это дательный падеж.');
+  R('ru_lishnee', 'ru.vocab', 1, 'Какое слово лишнее? <b>берёза, дуб, ромашка, клён</b>', 'ромашка',
+    [['берёза', 'Берёза — дерево, как дуб и клён.'], ['дуб', 'Дуб — дерево.'], ['клён', 'Клён — дерево.']],
+    'Три слова объединены общим признаком.', 'Берёза, дуб, клён — деревья, а ромашка — цветок.');
+  R('ru_olimp', 'ru.read', 1, '«Вечером Алия долго не могла уснуть: завтра её ждала первая в жизни олимпиада».<br>Почему Алия не могла уснуть?', 'Она волновалась перед олимпиадой.',
+    [['У неё болела голова.', 'В тексте этого нет.'], ['Было шумно.', 'В тексте этого нет.'], ['Она смотрела фильм.', 'В тексте этого нет.']],
+    'Двоеточие объясняет причину.', 'После двоеточия — причина: завтра первая олимпиада, поэтому она волновалась.');
+  R('ru_noskov', 'ru.grammar', 2, 'Выберите правильную форму: «У меня нет чистых …».', 'носков',
+    [['носок', 'Родительный падеж множественного числа — «носков».'], ['носки', 'Это именительный падеж.'], ['носками', 'Это творительный падеж.']],
+    'Нет (чего?) — родительный падеж.', 'Нет чего? — носков (родительный падеж мн. ч.).');
+  R('ru_ogromny', 'ru.vocab', 1, 'Подберите синоним к слову «огромный».', 'громадный',
+    [['крошечный', 'Это антоним.'], ['длинный', 'Длинный — о длине, а не о размере в целом.'], ['тяжёлый', 'Тяжёлый — о весе.']],
+    'Синоним — слово, близкое по значению.', '«Огромный» — «громадный».');
+  R('ru_vid', 'ru.grammar', 2, 'Укажите глагол совершенного вида.', 'решить',
+    [['решать', 'Это несовершенный вид (что делать?).'], ['читать', 'Несовершенный вид.'], ['писать', 'Несовершенный вид.']],
+    'Совершенный вид отвечает на вопрос «что сделать?».', 'Решить — что сделать? Это совершенный вид.');
+  R('ru_nesmotrya', 'ru.spell', 3, 'Как правильно: «(Не)смотря на дождь, мы пошли гулять»?', 'Несмотря',
+    [['Не смотря', 'Здесь это предлог (= вопреки), он пишется слитно.'], ['Не-смотря', 'Дефис здесь не ставится.'], ['Несмотрея', 'Такого слова нет.']],
+    'Можно ли заменить на «вопреки»?', '«Несмотря на» = вопреки — предлог, пишется слитно.');
+  R('ru_rukava', 'ru.meaning', 2, 'Что значит «работать спустя рукава»?', 'работать небрежно',
+    [['работать быстро', 'Фразеологизм не о скорости.'], ['работать в перчатках', 'Это буквальное понимание.'], ['работать без перерыва', 'Не по смыслу.']],
+    'Это фразеологизм.', '«Спустя рукава» — небрежно, кое-как.');
+  R('ru_shahmaty', 'ru.read', 1, 'Объявление: «Кружок шахмат переносится со среды на пятницу. Время прежнее — 15:00».<br>Когда теперь будет кружок?', 'в пятницу в 15:00',
+    [['в среду в 15:00', 'Кружок перенесли со среды.'], ['в пятницу в другое время', '«Время прежнее» — 15:00.'], ['в среду и в пятницу', 'Кружок перенесли, а не добавили.']],
+    'Обратите внимание на слова «переносится» и «прежнее».', 'День новый — пятница, время прежнее — 15:00.');
+
+  /* ---------- ЖАРАТЫЛЫСТАНУ: қосымша қысқа тапсырмалар ---------- */
+  var SC = function (id, t, k, d, c) { S(id, 'sci', t, k, d, c); };
+  SC('s2_spoon', 'sphys', 'sci.heat', 1, {
+    q: L('Ыстық шайдағы металл қасықтың сабы тез қызады, ал ағаш қасықтың сабы қызбайды. Неге?', 'Ручка металлической ложки в горячем чае быстро нагревается, а деревянной — нет. Почему?'),
+    a: L('Металл жылуды жақсы өткізеді', 'Металл хорошо проводит тепло'),
+    w: [[L('Ағаш жылуды жақсы өткізеді', 'Дерево хорошо проводит тепло'), L('Керісінше: ағаш жылуды нашар өткізеді.', 'Наоборот: дерево плохо проводит тепло.')], [L('Металл ауыр', 'Металл тяжёлый'), L('Салмақ жылу өткізгіштікті анықтамайды.', 'Вес не определяет теплопроводность.')], [L('Ағаш қасық ұзынырақ', 'Деревянная ложка длиннее'), L('Ұзындығы туралы шарт жоқ.', 'О длине ничего не сказано.')]],
+    h: L('Жылу заттың ішімен қалай беріледі?', 'Как тепло передаётся через вещество?'),
+    e: L('Металдар — жылуды жақсы өткізгіштер, ағаш — нашар өткізгіш. Сондықтан металл сап тез қызады.', 'Металлы хорошо проводят тепло, дерево — плохо. Поэтому металлическая ручка быстро нагревается.') });
+  SC('s2_renew', 'sphys', 'sci.energy', 1, {
+    q: L('Қай энергия көзі жаңартылатын болып саналады?', 'Какой источник энергии считается возобновляемым?'),
+    a: L('Жел', 'Ветер'),
+    w: [[L('Көмір', 'Уголь'), L('Көмір қоры шектеулі, жаңармайды.', 'Запасы угля ограничены и не восстанавливаются.')], [L('Мұнай', 'Нефть'), L('Мұнай миллиондаған жылда түзіледі — жаңартылмайды.', 'Нефть образуется миллионы лет — она невозобновляемая.')], [L('Табиғи газ', 'Природный газ'), L('Газ да шектеулі қазба отын.', 'Газ — тоже ограниченное ископаемое топливо.')]],
+    h: L('Қай көз таусылмайды?', 'Какой источник не иссякает?'),
+    e: L('Жел үнемі соғады, ол таусылмайды — жаңартылатын көз. Көмір, мұнай, газ — қазба отындар.', 'Ветер дует постоянно и не иссякает — это возобновляемый источник. Уголь, нефть, газ — ископаемое топливо.') });
+  SC('s2_roots', 'sbio', 'sci.plants', 1, {
+    q: L('Өсімдіктің тамыры қандай қызмет атқарады?', 'Какую функцию выполняет корень растения?'),
+    a: L('Топырақтан су мен минералды заттарды сіңіреді', 'Всасывает из почвы воду и минеральные вещества'),
+    w: [[L('Фотосинтез жасайды', 'Осуществляет фотосинтез'), L('Фотосинтез негізінен жапырақта жүреді.', 'Фотосинтез идёт в основном в листьях.')], [L('Тұқым түзеді', 'Образует семена'), L('Тұқым гүл мен жемістен түзіледі.', 'Семена образуются из цветка и плода.')], [L('Оттек бөледі', 'Выделяет кислород'), L('Оттекті жапырақтар бөледі.', 'Кислород выделяют листья.')]],
+    h: L('Тамыр қайда орналасқан?', 'Где находится корень?'),
+    e: L('Тамыр өсімдікті топыраққа бекітеді және одан су мен минералды заттарды сіңіреді.', 'Корень закрепляет растение в почве и всасывает из неё воду и минеральные вещества.') });
+  SC('s2_mercury', 'sgeo', 'sci.earth', 1, {
+    q: L('Күнге ең жақын планета қайсы?', 'Какая планета ближе всего к Солнцу?'),
+    a: L('Меркурий', 'Меркурий'),
+    w: [[L('Шолпан (Венера)', 'Венера'), L('Шолпан — екінші планета.', 'Венера — вторая планета.')], [L('Марс', 'Марс'), L('Марс — төртінші планета.', 'Марс — четвёртая планета.')], [L('Жер', 'Земля'), L('Жер — үшінші планета.', 'Земля — третья планета.')]],
+    h: L('Ретімен: Меркурий, Шолпан, Жер, Марс…', 'По порядку: Меркурий, Венера, Земля, Марс…'),
+    e: L('Күн жүйесіндегі бірінші планета — Меркурий.', 'Первая от Солнца планета — Меркурий.') });
+  SC('s2_ice', 'schem', 'sci.states', 2, {
+    q: L('Шыны бөтелкеге толтыра су құйып, қатты аязда сыртқа қалдырса, бөтелке жарылуы мүмкін. Неге?', 'Если стеклянную бутылку наполнить водой до верха и оставить на сильном морозе, она может лопнуть. Почему?'),
+    a: L('Су қатқанда оның көлемі артады', 'При замерзании объём воды увеличивается'),
+    w: [[L('Су қатқанда оның көлемі азаяды', 'При замерзании объём воды уменьшается'), L('Онда бөтелке жарылмас еді.', 'Тогда бутылка бы не лопнула.')], [L('Аязда шыны ериді', 'На морозе стекло плавится'), L('Шыны суықта ерімейді.', 'Стекло на холоде не плавится.')], [L('Мұздың массасы артады', 'Масса льда увеличивается'), L('Масса өзгермейді, көлем өзгереді.', 'Масса не меняется, меняется объём.')]],
+    h: L('Мұз суда қалқиды. Бұл оның тығыздығы туралы не айтады?', 'Лёд плавает в воде. Что это говорит о его плотности?'),
+    e: L('Су мұзға айналғанда көлемі шамамен 9%-ға артады. Мұз бөтелкені іштен қысып, жарады.', 'Вода, превращаясь в лёд, увеличивается в объёме примерно на 9%. Лёд давит на бутылку изнутри и разрывает её.') });
+  SC('s2_ball', 'sexp', 'sci.method', 2, {
+    q: L('Доп әртүрлі биіктіктен тасталды.' + NP.table(['Тастау биіктігі, см', '50', '100', '150'], [['Секіру биіктігі, см', '30', '60', '90']]) + 'Қай қорытынды дұрыс?', 'Мяч бросали с разной высоты.' + NP.table(['Высота броска, см', '50', '100', '150'], [['Высота отскока, см', '30', '60', '90']]) + 'Какой вывод верный?'),
+    a: L('Биіктен тастаған сайын доп биігірек секіреді', 'Чем выше бросок, тем выше отскок'),
+    w: [[L('Доп әрқашан бастапқы биіктікке дейін секіреді', 'Мяч всегда отскакивает на исходную высоту'), L('Кестеде секіру биіктігі тастау биіктігінен кіші.', 'По таблице отскок меньше высоты броска.')], [L('Секіру биіктігі тастау биіктігіне байланысты емес', 'Отскок не зависит от высоты броска'), L('Деректер байланысты көрсетеді.', 'Данные показывают зависимость.')], [L('Доптың массасы секіруге әсер етеді', 'Масса мяча влияет на отскок'), L('Масса тексерілмеген.', 'Массу не проверяли.')]],
+    h: L('Бір шама өскенде екіншісі қалай өзгереді?', 'Как меняется одна величина, когда растёт другая?'),
+    e: L('Тастау биіктігі 50 → 150 см болғанда, секіру 30 → 90 см артты. Демек, биіктен тастаса, доп биігірек секіреді.', 'Когда высота броска росла 50 → 150 см, отскок рос 30 → 90 см. Значит, чем выше бросок, тем выше отскок.') });
+  SC('s2_kidney', 'sbio', 'sci.body', 1, {
+    q: L('Қанды зиянды заттардан тазартып, несеп түзетін мүше қайсы?', 'Какой орган очищает кровь от вредных веществ и образует мочу?'),
+    a: L('Бүйрек', 'Почки'),
+    w: [[L('Жүрек', 'Сердце'), L('Жүрек қанды айдайды, тазартпайды.', 'Сердце перекачивает кровь, но не очищает её.')], [L('Өкпе', 'Лёгкие'), L('Өкпе газ алмасуға жауап береді.', 'Лёгкие отвечают за газообмен.')], [L('Асқазан', 'Желудок'), L('Асқазан тағамды қорытады.', 'Желудок переваривает пищу.')]],
+    h: L('Бұл мүше жұп болады.', 'Этот орган парный.'),
+    e: L('Бүйрек қанды сүзіп, артық су мен зиянды заттарды несеп арқылы шығарады.', 'Почки фильтруют кровь и выводят лишнюю воду и вредные вещества с мочой.') });
+  SC('s2_moon', 'sgeo', 'sci.earth', 2, {
+    q: L('Түнде Ай неге жарық болып көрінеді?', 'Почему ночью Луна кажется светлой?'),
+    a: L('Ол Күн сәулесін шағылыстырады', 'Она отражает свет Солнца'),
+    w: [[L('Ай өзі жарық шығарады', 'Луна сама излучает свет'), L('Ай — жұлдыз емес, өз жарығы жоқ.', 'Луна — не звезда, своего света у неё нет.')], [L('Жер Айды жарықтандырады', 'Земля освещает Луну'), L('Жердің өз жарығы жоқ; ол да Күн сәулесін шағылыстырады.', 'У Земли нет своего света; она тоже отражает солнечный свет.')], [L('Айда шамдар жанып тұр', 'На Луне горят огни'), L('Айда шамдар жоқ.', 'На Луне нет огней.')]],
+    h: L('Ай жұлдыз ба, әлде серік пе?', 'Луна — звезда или спутник?'),
+    e: L('Ай — Жердің серігі, оның өз жарығы жоқ. Біз Айдан шағылысқан Күн сәулесін көреміз.', 'Луна — спутник Земли, своего света у неё нет. Мы видим отражённый от неё солнечный свет.') });
+})();
+
+;
 /* Предметы, темы, навыки и короткие уроки (kk/ru). */
 (function () {
   var L = NP.L;
@@ -2526,6 +3003,10 @@ NP._assemble = function (tpl, g, r) {
     'sci.method': L('Тәжірибе жоспарлау және талдау', 'Планирование и анализ опыта'), 'sci.mixtures': L('Қоспаларды бөлу', 'Разделение смесей'), 'sci.change': L('Физикалық және химиялық құбылыстар', 'Физические и химические явления'), 'sci.states': L('Заттың күйлері', 'Агрегатные состояния'),
     'sci.plants': L('Өсімдіктер', 'Растения'), 'sci.ecology': L('Қоректік тізбек', 'Пищевые цепи'), 'sci.cell': L('Жасуша', 'Клетка'), 'sci.body': L('Адам ағзасы', 'Организм человека'), 'sci.animals': L('Жануарлар', 'Животные'),
     'sci.earth': L('Жер қозғалысы', 'Движение Земли'), 'sci.kz': L('Қазақстан географиясы', 'География Казахстана'), 'sci.climate': L('Ауа райы мен климат', 'Погода и климат'),
+    'units.len': L('Ұзындық бірліктері', 'Единицы длины'),
+    'en.vocab': L('Сөздік қор', 'Словарный запас'), 'en.grammar': L('Грамматика', 'Грамматика'), 'en.read': L('Қысқа мәтінді түсіну', 'Понимание короткого текста'), 'en.context': L('Жағдайға сай жауап', 'Ответ по ситуации'),
+    'kk.vocab': L('Сөз мағынасы', 'Значение слова'), 'kk.grammar': L('Грамматика', 'Грамматика'), 'kk.meaning': L('Мақал мен тұрақты тіркес', 'Пословицы и фразеологизмы'), 'kk.spell': L('Емле', 'Орфография'), 'kk.read': L('Қысқа мәтінді түсіну', 'Понимание короткого текста'),
+    'ru.vocab': L('Сөз мағынасы', 'Значение слова'), 'ru.grammar': L('Грамматика', 'Грамматика'), 'ru.meaning': L('Фразеологизмдер', 'Фразеологизмы'), 'ru.spell': L('Емле', 'Орфография'), 'ru.punct': L('Тыныс белгілері', 'Пунктуация'), 'ru.read': L('Қысқа мәтінді түсіну', 'Понимание короткого текста'),
     'lang.main': L('Негізгі ой', 'Основная мысль'), 'lang.detail': L('Нақты ақпаратты табу', 'Поиск информации'), 'lang.vocab': L('Сөздің мәтіндегі мағынасы', 'Значение слова в контексте'), 'lang.infer': L('Қорытынды жасау', 'Вывод из текста'), 'lang.purpose': L('Мәтіннің мақсаты', 'Цель текста')
   };
 
@@ -2734,6 +3215,24 @@ NP._assemble = function (tpl, g, r) {
     ex('"Tickets: adults – 2,000; children under 7 – free." How much does a 6-year-old pay?', ['"under 7" = 7 жасқа дейін.', '6 < 7.', 'Тегін (free).'], 'free'),
     ex('"Tickets: adults – 2,000; children under 7 – free." How much does a 6-year-old pay?', ['"under 7" = младше 7 лет.', '6 < 7.', 'Бесплатно (free).'], 'free'),
     ['Мәтіндегі сөзді көріп, мағынасын тексермей таңдау.'], ['Выбирать вариант только потому, что в нём есть слово из текста.']));
+  Tp('enmini', 'en', 'English: қысқа тапсырмалар', 'English: короткие задания', les(
+    ['Күнделікті ағылшын раундында төрт түрлі тапсырма бар: сөздік қор, грамматика, қысқа мәтін және жағдайға сай жауап.', 'Тапсырма ағылшынша, ал түсіндірме таңдалған тілде.', 'Деңгей (1–3) қысқа тексерістен кейін анықталады және жауаптарға қарай біртіндеп өзгереді.', 'Грамматикада сөйлемдегі «белгі сөздерге» назар аударыңыз: yesterday, now, every day, yet, than.'],
+    ['В ежедневном английском раунде четыре вида заданий: слова, грамматика, короткий текст и ответ по ситуации.', 'Задание на английском, объяснение — на выбранном языке.', 'Уровень (1–3) определяется короткой проверкой и постепенно меняется по ответам.', 'В грамматике ищите «слова-сигналы»: yesterday, now, every day, yet, than.'],
+    ex('Yesterday I ___ (see) a rainbow.', ['«Yesterday» — өткен шақтың белгісі.', 'See — бұрыс етістік: see → saw.', 'Yesterday I saw a rainbow.'], 'saw'),
+    ex('Yesterday I ___ (see) a rainbow.', ['«Yesterday» — признак прошедшего времени.', 'See — неправильный глагол: see → saw.', 'Yesterday I saw a rainbow.'], 'saw'),
+    ['Белгі сөзді байқамау.', 'He/she/it-пен -s жалғауын ұмыту.'], ['Не заметить слово-сигнал.', 'Забыть -s с he/she/it.']));
+  Tp('kkmini', 'kk', 'Қазақ тілі: қысқа тапсырмалар', 'Казахский язык: короткие задания', les(
+    ['Қысқа тапсырмалар: сөз мағынасы, синоним мен антоним, септік жалғаулары, емле, мақал-мәтел мағынасы, қысқа мәтін.', 'Септікті табу үшін сұрақ қойыңыз: кімге? неге? қайда? (барыс), қайда? (жатыс), қайдан? (шығыс).', 'Жалғау сөздің соңғы буынына (жуан/жіңішке) және соңғы дыбысына қарай таңдалады.'],
+    ['Қысқа тапсырмалар: сөз мағынасы, синоним мен антоним, септік жалғаулары, емле, мақал-мәтел мағынасы, қысқа мәтін.', 'Септікті табу үшін сұрақ қойыңыз: кімге? неге? қайда? (барыс), қайда? (жатыс), қайдан? (шығыс).', 'Жалғау сөздің соңғы буынына (жуан/жіңішке) және соңғы дыбысына қарай таңдалады.'],
+    ex('«Мектеп» сөзіне көптік жалғауын жалғаңыз.', ['«Мектеп» — жіңішке сөз.', 'Соңғы дыбыс «п» — қатаң дыбыс, сондықтан -тер.', 'мектептер.'], 'мектептер'),
+    ex('«Мектеп» сөзіне көптік жалғауын жалғаңыз.', ['«Мектеп» — жіңішке сөз.', 'Соңғы дыбыс «п» — қатаң дыбыс, сондықтан -тер.', 'мектептер.'], 'мектептер'),
+    ['Жуан-жіңішке үндестікті ескермеу.', 'Тұрақты тіркесті сөзбе-сөз түсіну.'], ['Жуан-жіңішке үндестікті ескермеу.', 'Тұрақты тіркесті сөзбе-сөз түсіну.']));
+  Tp('rumini', 'ru', 'Орыс тілі: қысқа тапсырмалар', 'Русский язык: короткие задания', les(
+    ['Короткие задания: орфография, -тся/-ться, падежи, синонимы и антонимы, фразеологизмы, запятые, короткий текст.', '-тся/-ться: задайте вопрос к глаголу. «Что делает?» — без ь; «что делать?» — с ь.', 'Перед союзами «а», «но» в сложном предложении ставится запятая.'],
+    ['Короткие задания: орфография, -тся/-ться, падежи, синонимы и антонимы, фразеологизмы, запятые, короткий текст.', '-тся/-ться: задайте вопрос к глаголу. «Что делает?» — без ь; «что делать?» — с ь.', 'Перед союзами «а», «но» в сложном предложении ставится запятая.'],
+    ex('Он любит (кататься/катается) на коньках.', ['Любит что делать?', 'Вопрос с ь — значит, и в глаголе ь.', 'Он любит кататься.'], 'кататься'),
+    ex('Он любит (кататься/катается) на коньках.', ['Любит что делать?', 'Вопрос с ь — значит, и в глаголе ь.', 'Он любит кататься.'], 'кататься'),
+    ['Понимать фразеологизм буквально.', 'Не задать вопрос к глаголу.'], ['Понимать фразеологизм буквально.', 'Не задать вопрос к глаголу.']));
 })();
 
 ;
@@ -2770,7 +3269,7 @@ NP._assemble = function (tpl, g, r) {
       var s = r.shuffle(pool('sci')).slice(0, 20);
       [[m, 'math'], [q, 'qc'], [s, 'sci']].forEach(function (p) { p[0].forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: p[1], s: t.s }); }); });
     } else {
-      ['kk', 'ru', 'en'].forEach(function (lg) { pool(lg).forEach(function (t) { items.push({ id: t.id, seed: 1, sec: 'lang', s: t.s }); }); });
+      ['kk', 'ru', 'en'].forEach(function (lg) { pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { items.push({ id: t.id, seed: 1, sec: 'lang', s: t.s }); }); });
     }
     var title = day === 1 ? L('Толық сынақ: 1-күн', 'Полный тест: 1-й день') : L('Толық сынақ: 2-күн', 'Полный тест: 2-й день');
     return base('exam' + day, 'day' + day, title, mode, items, mkSections(NP.FORMAT[day]), { day: day, timed: mode === 'exam' });
@@ -2782,7 +3281,7 @@ NP._assemble = function (tpl, g, r) {
     var per = { math: 2, qc: 3, sci: 2 }[sub];
     if (sub === 'lang') {
       ['kk', 'ru', 'en'].forEach(function (lg) {
-        var ps = {}; pool(lg).forEach(function (t) { (ps[t.pass] = ps[t.pass] || []).push(t); });
+        var ps = {}; pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { (ps[t.pass] = ps[t.pass] || []).push(t); });
         var keys = Object.keys(ps), pk = keys[r.int(0, keys.length - 1)];
         ps[pk].forEach(function (t) { items.push({ id: t.id, seed: 1, sec: 'all', s: t.s }); });
       });
@@ -2844,6 +3343,245 @@ NP._assemble = function (tpl, g, r) {
 })();
 
 ;
+/* «Күнделікті раунд»: подбор коротких раундов на день, уровень английского, серия дней и значки.
+   Чистые функции от состояния S — проверяются в Node без браузера. */
+(function () {
+  var L = NP.L, DAY = 86400000, F = NP.F;
+  var dayKey = function (ts) { var d = new Date(ts); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+  var dayStart = function (ts) { var d = new Date(ts); d.setHours(0, 0, 0, 0); return d.getTime(); };
+  NP.dayKey = dayKey;
+  var LOGIC_T = ['logic', 'spatial', 'seq'];
+  var POOLS = null;
+  var pools = function () {
+    if (POOLS) return POOLS;
+    POOLS = {
+      math: NP.TPL.filter(function (t) { return t.s === 'math' && LOGIC_T.indexOf(t.t) < 0; }),
+      logic: NP.TPL.filter(function (t) { return t.s === 'qc' || (t.s === 'math' && LOGIC_T.indexOf(t.t) >= 0); }),
+      en: NP.TPL.filter(function (t) { return t.t === 'enmini'; }),
+      sci: NP.TPL.filter(function (t) { return t.s === 'sci'; }),
+      kk: NP.TPL.filter(function (t) { return t.t === 'kkmini'; }),
+      ru: NP.TPL.filter(function (t) { return t.t === 'rumini'; })
+    };
+    return POOLS;
+  };
+  var isStatic = function (t) { return t.g.length === 0; };
+  var skillKey = function (s, k) { return s + ':' + k; };
+
+  /* Оценка времени (сек) на задание вместе с чтением разбора */
+  NP.estSec = function (t) {
+    var base;
+    if (t.s === 'math') base = LOGIC_T.indexOf(t.t) >= 0 ? [0, 50, 80, 100][t.d] : [0, 40, 70, 95][t.d];
+    else if (t.s === 'qc') base = [0, 30, 40, 55][t.d];
+    else if (t.s === 'en') base = [0, 35, 45, 55][t.lv || t.d];
+    else if (t.s === 'sci') base = 55; else base = 45;
+    return base + 12;
+  };
+
+  var CEFR = { 1: 'A1', 2: 'A2', 3: 'B1' };
+  NP.CEFR = CEFR;
+  var THEMES = {
+    route: L('Миссия: Алматы бойынша маршрут', 'Миссия: маршрут по Алматы'), shop: L('Миссия: дүкендегі есептер', 'Миссия: расчёты в магазине'),
+    build: L('Миссия: құрылыс алаңы', 'Миссия: стройплощадка'), sport: L('Миссия: спорт статистикасы', 'Миссия: спортивная статистика'),
+    numbers: L('Миссия: сандар шеберханасы', 'Миссия: мастерская чисел')
+  };
+  var themeOf = function (topic) {
+    if (topic === 'speed' || topic === 'units') return THEMES.route;
+    if (topic === 'pct' || topic === 'word' || topic === 'ratio') return THEMES.shop;
+    if (topic === 'geo' || topic === 'vol') return THEMES.build;
+    if (topic === 'data' || topic === 'mean' || topic === 'prob') return THEMES.sport;
+    return THEMES.numbers;
+  };
+  NP.SLOT = { warm: L('Жаттығу', 'Разминка'), main: L('Негізгі', 'Основное'), hard: L('Қиынырақ', 'Посложнее'), boss: L('Күннің есебі', 'Задача дня'), review: L('Қайталау', 'Повторение'), level: L('Деңгей', 'Уровень'), stretch: L('Келесі деңгей', 'Шаг вперёд'), extra: L('Қосымша', 'Дополнительно'), similar: L('Ұқсас', 'Похожее') };
+
+  /* Анализ состояния */
+  var analyze = function (S, now) {
+    var last = {}, topic = {}, today0 = dayStart(now);
+    S.log.forEach(function (e) {
+      if (!last[e.id] || e.ts > last[e.id]) last[e.id] = e.ts;
+      (topic[e.t] = topic[e.t] || []).push(e);
+    });
+    var tAcc = {};
+    Object.keys(topic).forEach(function (k) { var arr = topic[k].slice(-12), c = arr.filter(function (e) { return e.ok; }).length; tAcc[k] = { n: arr.length, c: c }; });
+    var due = {};
+    S.mistakes.forEach(function (m) {
+      if (m.status === 'fixed') return;
+      var isDue = (m.status === 'later' && m.due && m.due <= now) || ((m.status === 'new' || m.status === 'work') && m.ts < today0);
+      if (!isDue) return;
+      var k = skillKey(m.s, m.k); (due[k] = due[k] || { n: 0, t: m.t, s: m.s, k: m.k, last: 0 }); due[k].n++; due[k].last = Math.max(due[k].last, m.ts);
+    });
+    /* ошибки в двух последних ежедневных занятиях — для понятного объяснения */
+    var recentDaily = S.attempts.filter(function (a) { return a.kind === 'daily'; }).slice(0, 2), recentErrTopics = {};
+    recentDaily.forEach(function (a) { a.items.forEach(function (x) { if (!x.ok) recentErrTopics[x.t] = (recentErrTopics[x.t] || 0) + 1; }); });
+    var comfort = function (subjects) {
+      var arr = S.log.filter(function (e) { return subjects.indexOf(e.s) >= 0 && e.d !== 1; }).slice(-12);
+      return { n: arr.length, c: arr.filter(function (e) { return e.ok; }).length };
+    };
+    return { last: last, tAcc: tAcc, due: due, recentErrTopics: recentErrTopics, comfort: comfort, now: now, today0: today0, nDaily: recentDaily.length };
+  };
+
+  var score = function (t, A, r, opt) {
+    var s = r.f();
+    var ls = A.last[t.id];
+    if (!ls) s += 1.2; else { var d = (A.now - ls) / DAY; s += d < 1 ? -1.6 : Math.min(d, 10) * 0.15; }
+    var ta = A.tAcc[t.t]; if (ta && ta.n >= 3 && ta.c / ta.n < 0.6) s += 0.8;
+    if (opt.review && A.due[skillKey(t.s, t.k)]) s += 5;
+    return s;
+  };
+  var pick = function (pool, A, r, opt, used) {
+    var cand = pool.filter(function (t) { return (!opt.d || opt.d.indexOf(t.lv || t.d) >= 0) && !used.ids[t.id] && (!opt.k || opt.k.indexOf(t.k) >= 0); });
+    var fresh = cand.filter(function (t) { return !used.topics[t.t] && !used.skills[t.k]; });
+    if (fresh.length) cand = fresh;
+    if (opt.review) { var rv = cand.filter(function (t) { return A.due[skillKey(t.s, t.k)]; }); if (rv.length) cand = rv; else return null; }
+    if (!cand.length) return null;
+    var best = null, bs = -1e9;
+    cand.forEach(function (t) { var s = score(t, A, r, opt); if (s > bs) { bs = s; best = t; } });
+    used.ids[best.id] = 1; used.topics[best.t] = 1; used.skills[best.k] = 1;
+    return best;
+  };
+  var item = function (t, r, ri, slot) { return { id: t.id, seed: isStatic(t) ? 1 : r.int(1, 2e9), s: t.s, r: ri, slot: slot }; };
+  var nm = function (o, lg) { return o[lg]; };
+  var tName = function (t) { return NP.TOPICS[t] ? NP.TOPICS[t].name : L(t, t); };
+
+  NP.buildDaily = function (S, mode, now, seed) {
+    var r = NP.rng(seed >>> 0), A = analyze(S, now), P = pools();
+    var rounds = [], items = [], reasons = [], short = mode === 'short';
+    var lowData = S.log.length < 15;
+    if (lowData) reasons.push(L('Әзірге дерек жеткіліксіз — тағы бірнеше раунд өт, сонда тапсырмалар саған дәлірек таңдалады.', 'Пока недостаточно данных — пройди ещё несколько раундов, и задания будут подбираться точнее.'));
+    var addRound = function (meta, list) { var ri = rounds.length; meta.n = list.length; rounds.push(meta); list.forEach(function (x) { items.push(item(x.t, r, ri, x.slot)); }); };
+    var reviewNote = function (t) {
+      var tn = tName(t.t), rec = A.recentErrTopics[t.t];
+      return rec && A.nDaily >= 2 ? L('«' + tn.kk + '» тақырыбына қайталау қосылды, өйткені соңғы екі сабақта осы жерде қате болды.', 'Добавили повторение по теме «' + tn.ru + '», потому что в последних двух занятиях здесь были ошибки.')
+        : L('«' + tn.kk + '» тақырыбына қайталау қосылды: бұрын осы дағдыда қате болған, енді жаңа тапсырмамен тексереміз.', 'Добавили повторение по теме «' + tn.ru + '»: раньше в этом навыке была ошибка, проверим его на новом задании.');
+    };
+
+    /* 1. Математикалық спринт */
+    var cm = A.comfort(['math']), stretch = cm.n >= 6 && cm.c / cm.n >= 0.75, easier = cm.n >= 6 && cm.c / cm.n < 0.45;
+    var used = { ids: {}, topics: {}, skills: {} }, mlist = [], why = [];
+    mlist.push({ t: pick(P.math, A, r, { d: [1] }, used), slot: 'warm' });
+    var placeDay = !(S.en && S.en.placed) && !short;
+    var rv = pick(P.math, A, r, { d: [2], review: true }, used) || pick(P.math, A, r, { d: [3], review: true }, used);
+    if (rv) { mlist.push({ t: rv, slot: 'review' }); why.push(reviewNote(rv)); }
+    else mlist.push({ t: pick(P.math, A, r, { d: [2] }, used), slot: 'main' });
+    if (!short) {
+      if (!placeDay) mlist.push({ t: pick(P.math, A, r, { d: stretch ? [3] : [2] }, used), slot: 'hard' });
+      mlist.push({ t: pick(P.math, A, r, { d: [3] }, used), slot: 'boss' });
+    }
+    if (stretch) why.push(L('Соңғы математика тапсырмаларының ' + Math.round(cm.c / cm.n * 100) + '%-ы дұрыс — бүгін бір тапсырма қиынырақ.', 'Последние задания по математике решены на ' + Math.round(cm.c / cm.n * 100) + '% — сегодня одно задание сложнее.'));
+    if (easier) why.push(L('Соңғы тапсырмалар қиын болды, сондықтан бүгін «Қиынырақ» тапсырма орта деңгейде.', 'Последние задания давались трудно, поэтому сегодня «Посложнее» — среднего уровня.'));
+    var stale = mlist.filter(function (x) { var ls = A.last[x.t.id]; return ls && (now - ls) / DAY >= 5; })[0];
+    if (stale && !lowData) why.push(L('«' + tName(stale.t.t).kk + '» тақырыбы ' + Math.floor((now - A.last[stale.t.id]) / DAY) + ' күннен бері қайталанбады.', 'Тема «' + tName(stale.t.t).ru + '» не повторялась ' + Math.floor((now - A.last[stale.t.id]) / DAY) + ' дн.'));
+    var bossT = mlist[mlist.length - 1].t.t;
+    mlist = mlist.filter(function (x) { return x.t; });
+    addRound({ key: 'math', kind: 'math', title: L('Математикалық спринт', 'Математический спринт'), sub: themeOf(bossT), why: why }, mlist);
+
+    /* 2. Логика / СС */
+    used = { ids: {}, topics: {}, skills: {} }; var llist = [], lwhy = [];
+    var qcOnly = P.logic.filter(function (t) { return t.s === 'qc'; }), puzzles = P.logic.filter(function (t) { return t.s === 'math'; });
+    llist.push({ t: pick(qcOnly, A, r, { d: [1, 2] }, used), slot: 'warm' });
+    var lrv = pick(P.logic, A, r, { d: [2, 3], review: true }, used);
+    if (lrv) { llist.push({ t: lrv, slot: 'review' }); lwhy.push(reviewNote(lrv)); }
+    else llist.push({ t: pick(short ? qcOnly : P.logic, A, r, { d: [2] }, used), slot: 'main' });
+    if (!short && !placeDay) llist.push({ t: pick(r.f() < 0.65 ? puzzles : qcOnly, A, r, { d: [3] }, used) || pick(P.logic, A, r, { d: [3] }, used), slot: 'boss' });
+    addRound({ key: 'logic', kind: 'logic', title: L('Логикалық квест', 'Логический квест'), sub: L('Жұмбақ бөлмесі: салыстыру, заңдылық, шарт', 'Комната головоломок: сравнение, закономерность, условие'), why: lwhy }, llist.filter(function (x) { return x.t; }));
+
+    /* 3. English mini-round */
+    var en = S.en || { placed: false, level: 1, hist: [] }, elist = [], ewhy = [];
+    used = { ids: {}, topics: {}, skills: {} };
+    var placement = !en.placed && !short;
+    if (placement) {
+      [1, 1, 2, 2, 3, 3].forEach(function (lv) { var t = pick(P.en, A, r, { d: [lv] }, used); if (t) elist.push({ t: t, slot: 'level' }); used.skills = {}; });
+      ewhy.push(L('Алдымен деңгейді анықтаймыз: 6 тапсырма, 1-ден 3-ке дейін қиындай береді. Бұл — алғашқы шамамен баға.', 'Сначала определим уровень: 6 заданий от 1 до 3 по сложности. Это первая примерная оценка.'));
+      addRound({ key: 'en', kind: 'en', place: true, title: L('English: деңгейді анықтау', 'English: определение уровня'), sub: L('Тапсырмалар ағылшынша, түсіндірме — таңдалған тілде', 'Задания на английском, объяснения — на выбранном языке'), why: ewhy }, elist);
+    } else {
+      var lv = en.placed ? en.level : 1;
+      elist.push({ t: pick(P.en, A, r, { d: [lv] }, used), slot: 'level' });
+      if (!short) {
+        var erv = pick(P.en, A, r, { d: [lv, Math.min(3, lv + 1)], review: true }, used);
+        if (erv) { elist.push({ t: erv, slot: 'review' }); ewhy.push(reviewNote(erv)); }
+        else elist.push({ t: pick(P.en, A, r, { d: [lv] }, used), slot: 'level' });
+      }
+      if (!short) elist.push({ t: pick(P.en, A, r, { d: [Math.min(3, lv + 1)] }, used) || pick(P.en, A, r, { d: [lv] }, used), slot: lv < 3 ? 'stretch' : 'level' });
+      ewhy.unshift(en.placed ? L('English деңгейі: ' + lv + ' (шамамен ' + CEFR[lv] + '). Деңгей жауаптарға қарай біртіндеп өзгереді.', 'Уровень English: ' + lv + ' (примерно ' + CEFR[lv] + '). Он постепенно меняется по ответам.')
+        : L('Деңгейді анықтау 10–15 минуттық раундта өтеді. Әзірге 1-деңгей.', 'Уровень определяется в раунде на 10–15 минут. Пока — уровень 1.'));
+      addRound({ key: 'en', kind: 'en', title: L('English mini-round', 'English mini-round'), sub: L('Сөздер, грамматика, қысқа мәтін, диалог', 'Слова, грамматика, короткий текст, диалог'), why: ewhy }, elist.filter(function (x) { return x.t; }));
+    }
+
+    /* 4. Қосымша раунд: жаратылыстану / қазақ / орыс (кезекпен) */
+    if (!short && !placement) {
+      var cycle = ['sci', 'kk', 'sci', 'ru'], dn = Math.floor((dayStart(now) - new Date(2026, 0, 5).getTime()) / DAY);
+      var subj = cycle[((dn % 4) + 4) % 4], xwhy = [];
+      var weak = ['sci', 'kk', 'ru'].map(function (s) {
+        var arr = S.log.filter(function (e) { return e.s === s && (s === 'sci' || e.t === s + 'mini'); }).slice(-10), c = arr.filter(function (e) { return e.ok; }).length;
+        var hasDue = Object.keys(A.due).some(function (k) { return A.due[k].s === s; });
+        return { s: s, n: arr.length, a: arr.length ? c / arr.length : 1, due: hasDue };
+      }).filter(function (x) { return x.n >= 4 && x.a < 0.5 && x.due; }).sort(function (a, b) { return a.a - b.a; })[0];
+      if (weak && weak.s !== subj) { subj = weak.s; xwhy.push(L('Бүгін «' + NP.SUBJ[subj].kk + '» кезектен тыс қосылды: соңғы жауаптардың ' + Math.round(weak.a * 100) + '%-ы ғана дұрыс.', 'Сегодня «' + NP.SUBJ[subj].ru + '» добавлен вне очереди: верно только ' + Math.round(weak.a * 100) + '% последних ответов.')); }
+      else xwhy.push(L('Қосымша раунд күн сайын ауысады: жаратылыстану, қазақ тілі, жаратылыстану, орыс тілі.', 'Дополнительный раунд меняется по дням: естествознание, казахский, естествознание, русский.'));
+      used = { ids: {}, topics: {}, skills: {} };
+      var xp = P[subj], xl = [];
+      var xr = pick(xp, A, r, { review: true }, used);
+      if (xr) { xl.push({ t: xr, slot: 'review' }); xwhy.push(reviewNote(xr)); }
+      var xn = (weak && weak.s === subj) || xr ? 2 : 1;
+      while (xl.length < xn) { var xt = pick(xp, A, r, {}, used); if (!xt) break; xl.push({ t: xt, slot: 'extra' }); }
+      var xtitle = { sci: L('Зерттеу зертханасы', 'Исследовательская лаборатория'), kk: L('Қазақ тілі: сөз шеберханасы', 'Казахский язык: мастерская слов'), ru: L('Орыс тілі: сөз шеберханасы', 'Русский язык: мастерская слов') }[subj];
+      var xsub = { sci: L('Құбылыс, себеп пен салдар, тәжірибе', 'Явления, причины и следствия, опыт'), kk: L('Сөз мағынасы, грамматика, қысқа мәтін', 'Значение слов, грамматика, короткий текст'), ru: L('Сөз мағынасы, грамматика, қысқа мәтін', 'Значение слов, грамматика, короткий текст') }[subj];
+      addRound({ key: 'x-' + subj, kind: subj, title: xtitle, sub: xsub, why: xwhy }, xl);
+    }
+
+    var est = items.reduce(function (s, it) { return s + NP.estSec(NP.byId[it.id]); }, 0);
+    return { rounds: rounds, items: items, reasons: reasons, estMin: Math.round(est / 60), placement: placement };
+  };
+
+  /* Уровень английского */
+  NP.enPlace = function (S, items) {
+    var c = { 1: 0, 2: 0, 3: 0 };
+    items.forEach(function (it) { var t = NP.byId[it.id]; if (it.ok) c[t.lv]++; });
+    var lv = 1;
+    if (c[2] === 2 || (c[2] === 1 && c[1] === 2)) lv = 2;
+    if (lv === 2 && c[3] === 2) lv = 3;
+    S.en = { placed: true, level: lv, hist: [], ups: 0, downs: 0, placedAt: Date.now(), placeScore: c };
+    return lv;
+  };
+  NP.enAfter = function (S, t, ok) {
+    var en = S.en; if (!en || !en.placed || t.lv !== en.level) return null;
+    en.hist.push(ok ? 1 : 0); if (en.hist.length > 10) en.hist.shift();
+    var n = en.hist.length, a = en.hist.reduce(function (s, x) { return s + x; }, 0) / (n || 1);
+    if (n >= 8 && a >= 0.8 && en.level < 3) { en.level++; en.hist = []; en.ups = (en.ups || 0) + 1; return 'up'; }
+    if (n >= 6 && a <= 0.4 && en.level > 1) { en.level--; en.hist = []; en.downs = (en.downs || 0) + 1; return 'down'; }
+    return null;
+  };
+
+  /* Серия, рекорд, значки */
+  NP.dailyStats = function (S, now) {
+    var ds = S.attempts.filter(function (a) { return a.kind === 'daily'; });
+    var days = {}; ds.forEach(function (a) { days[dayKey(a.ts)] = 1; });
+    var streak = 0, d = dayStart(now);
+    if (!days[dayKey(d)]) d -= DAY;
+    while (days[dayKey(d)]) { streak++; d -= DAY; }
+    var keys = Object.keys(days).sort(), best = 0, run = 0, prev = null;
+    keys.forEach(function (k) { var t = new Date(k + 'T12:00:00').getTime(); run = prev !== null && Math.round((t - prev) / DAY) === 1 ? run + 1 : 1; prev = t; best = Math.max(best, run); });
+    var record = 0; ds.forEach(function (a) { if (a.sub === 'normal') record = Math.max(record, a.c); });
+    var boss = 0; ds.forEach(function (a) { a.items.forEach(function (x) { if (x.slot === 'boss' && x.ok) boss++; }); });
+    var week = S.log.filter(function (e) { return now - e.ts < 7 * DAY; }), subs = {}; week.forEach(function (e) { subs[e.s] = 1; });
+    var fixed = S.mistakes.some(function (m) { return m.status === 'fixed'; });
+    var st = {}; S.log.forEach(function (e) { var k = e.s + ':' + e.k; (st[k] = st[k] || { n: 0, c: 0 }); st[k].n++; if (e.ok) st[k].c++; });
+    var mastered = Object.keys(st).filter(function (k) { return st[k].n >= 6 && st[k].c / st[k].n >= 0.8; }).length;
+    var B = function (id, got, kk, ru, dk, dr) { return { id: id, got: !!got, name: L(kk, ru), desc: L(dk, dr) }; };
+    var badges = [
+      B('first', ds.length >= 1, 'Алғашқы қадам', 'Первый шаг', 'Бірінші күнделікті раундты аяқтау', 'Завершить первую тренировку дня'),
+      B('s3', best >= 3, '3 күн қатарынан', '3 дня подряд', 'Үш күн қатарынан жаттығу', 'Заниматься три дня подряд'),
+      B('s7', best >= 7, 'Апталық серия', 'Неделя подряд', 'Жеті күн қатарынан жаттығу', 'Заниматься семь дней подряд'),
+      B('d10', Object.keys(days).length >= 10, '10 күн', '10 дней', 'Барлығы 10 күн жаттығу', 'Всего 10 дней занятий'),
+      B('boss5', boss >= 5, 'Босс-жеңімпаз', 'Победитель босса', '5 «күннің есебін» дұрыс шешу', 'Решить 5 «задач дня»'),
+      B('fix', fixed, 'Қатемен жұмыс', 'Работа над ошибками', 'Бір қатені толық түзету (екі түрлі күні тексеру)', 'Полностью исправить ошибку (проверка в два разных дня)'),
+      B('enup', S.en && S.en.ups >= 1, 'English өсуі', 'Рост в English', 'English деңгейін көтеру', 'Повысить уровень English'),
+      B('all6', Object.keys(subs).length >= 6, 'Барлық пән', 'Все предметы', 'Бір аптада барлық 6 пән бойынша жауап беру', 'За неделю ответить по всем 6 предметам')
+    ];
+    return { streak: streak, best: best, days: Object.keys(days).length, today: !!days[dayKey(now)], record: record, boss: boss, mastered: mastered, badges: badges };
+  };
+})();
+
+;
 /* Интерфейс приложения. Без фреймворков: состояние → HTML, обработчики через data-атрибуты. */
 (function () {
   'use strict';
@@ -2861,7 +3599,7 @@ NP._assemble = function (tpl, g, r) {
   /* ---------------- Тексты интерфейса ---------------- */
   var TX = {
     brand: L('NIS-ке дайындық', 'Подготовка к NIS'),
-    home: L('Оқу панелі', 'Главная'), learn: L('Үйрену', 'Учиться'), diag: L('Диагностика', 'Диагностика'), exam: L('Толық сынақ', 'Полный тест'),
+    home: L('Оқу панелі', 'Главная'), daily: L('Күнделікті раунд', 'Тренировка дня'), learn: L('Үйрену', 'Учиться'), diag: L('Диагностика', 'Диагностика'), exam: L('Толық сынақ', 'Полный тест'),
     results: L('Нәтижелер', 'Результаты'), mistakes: L('Қателерді қайталау', 'Работа над ошибками'), plan: L('Апталық жоспар', 'Недельный план'), data: L('Деректер', 'Данные'),
     uiLang: L('Интерфейс', 'Интерфейс'), qLang: L('Тапсырма тілі', 'Язык заданий'),
     local: L('Прогресс тек осы құрылғының браузерінде сақталады. Басқа құрылғыда ол автоматты түрде көрінбейді — сақтық көшірме жасап тұрыңыз.', 'Прогресс хранится только в браузере этого устройства. На другом устройстве он автоматически не появится — периодически делайте резервную копию.'),
@@ -2889,7 +3627,7 @@ NP._assemble = function (tpl, g, r) {
 
   /* ---------------- Хранилище ---------------- */
   var storageOk = true;
-  var fresh = function () { return { v: VERSION, app: 'nis-prep', ui: 'kk', ql: 'kk', created: Date.now(), sessions: { full: null, test: null, practice: null }, attempts: [], log: [], mistakes: [], plan: null, seen: {} }; };
+  var fresh = function () { return { v: VERSION, app: 'nis-prep', ui: 'kk', ql: 'kk', created: Date.now(), sessions: { full: null, test: null, practice: null, daily: null }, en: { placed: false, level: 1, hist: [], ups: 0, downs: 0 }, attempts: [], log: [], mistakes: [], plan: null, seen: {} }; };
   var load = function () {
     try { var raw = localStorage.getItem(KEY); if (raw) { var s = JSON.parse(raw); if (s && s.v === VERSION) return s; } } catch (e) { storageOk = false; }
     return fresh();
@@ -2897,6 +3635,8 @@ NP._assemble = function (tpl, g, r) {
   var save = function () { try { localStorage.setItem(KEY, JSON.stringify(S)); storageOk = true; } catch (e) { storageOk = false; } };
   S = load();
   if (!S.sessions) S.sessions = { full: null, test: null, practice: null };
+  if (S.sessions.daily === undefined) S.sessions.daily = null;
+  if (!S.en) S.en = { placed: false, level: 1, hist: [], ups: 0, downs: 0 };
 
   /* ---------------- Статистика ---------------- */
   var skillKey = function (s, k) { return s + ':' + k; };
@@ -2915,7 +3655,8 @@ NP._assemble = function (tpl, g, r) {
   var snap = function (inst) { return { kk: { stem: inst.L.kk.stem, opts: inst.L.kk.opts, e: inst.L.kk.e, whys: inst.L.kk.whys }, ru: { stem: inst.L.ru.stem, opts: inst.L.ru.opts, e: inst.L.ru.e, whys: inst.L.ru.whys } }; };
   var record = function (it, inst, sel, src, title) {
     var ok = sel !== null && sel !== undefined && sel === inst.ans, now = Date.now();
-    S.log.push({ ts: now, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, ok: ok, src: src });
+    S.log.push({ ts: now, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, d: inst.d, ok: ok, src: src });
+    record.lastMid = null;
     var key = skillKey(inst.s, inst.k);
     S.mistakes.forEach(function (m) {
       if (m.status === 'fixed' || skillKey(m.s, m.k) !== key) return;
@@ -2929,7 +3670,8 @@ NP._assemble = function (tpl, g, r) {
       } else if (m.status === 'later') { m.status = 'work'; m.checks = []; m.due = null; }
     });
     if (!ok) {
-      S.mistakes.unshift({ mid: NP.uid(), ts: now, test: title, src: src, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, sel: sel === undefined ? null : sel, ans: inst.ans, snap: snap(inst), reason: null, next: null, status: 'new', checks: [], due: null });
+      record.lastMid = NP.uid();
+      S.mistakes.unshift({ mid: record.lastMid, ts: now, test: title, src: src, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, sel: sel === undefined ? null : sel, ans: inst.ans, snap: snap(inst), reason: null, next: null, status: 'new', checks: [], due: null });
     }
     return ok;
   };
@@ -2944,7 +3686,7 @@ NP._assemble = function (tpl, g, r) {
   var ask = function (text, yes, onYes) { modal = { text: text, yes: yes, onYes: onYes }; render(); };
 
   /* ---------------- Каркас ---------------- */
-  var NAV = ['home', 'learn', 'diag', 'exam', 'results', 'mistakes', 'plan'];
+  var NAV = ['home', 'daily', 'learn', 'mistakes', 'results', 'diag', 'exam', 'plan'];
   var shell = function (main) {
     var r = route().split('-')[0];
     var nav = NAV.map(function (k) { return '<a href="#' + k + '" class="nav-i' + (r === k || (k === 'exam' && r === 'run' && false) ? ' on' : '') + '"' + (r === k ? ' aria-current="page"' : '') + '>' + esc(t(TX[k])) + '</a>'; }).join('');
@@ -2970,10 +3712,11 @@ NP._assemble = function (tpl, g, r) {
   };
   var viewHome = function () {
     var act = activeList(), h = h1(esc(t(L('Сәлем! Бүгін немен айналысамыз?', 'Привет! Чем займёмся сегодня?'))), esc(t(L('Математика мен сандық сипаттамаларға басымдық беріледі. Әр нәтиже тек сіздің шын жауаптарыңызға негізделеді.', 'Главный упор — на математику и количественные характеристики. Все выводы строятся только на ваших реальных ответах.'))));
+    h += dailyCard();
     if (act.length) h += card('<h2>' + esc(t(L('Аяқталмаған жұмыс', 'Незавершённая работа'))) + '</h2><div class="list">' + act.map(function (a) { var ans = Object.keys(a.s.answers).length; return '<div class="li"><div><b>' + esc(t(a.s.title)) + '</b><div class="muted">' + ans + ' / ' + a.s.items.length + '</div></div><button class="btn pri" data-act="open-run" data-v="' + a.slot + '">' + esc(t(TX.resume)) + '</button></div>'; }).join('') + '</div>');
     if (!S.attempts.length && !S.log.length) {
-      h += card('<h2>' + esc(t(L('Әлі нәтиже жоқ', 'Пока нет результатов'))) + '</h2><p>' + esc(t(L('Бастапқы диагностикадан бастаңыз: ол әр бағыт бойынша қай дағдылар жақсы, қайсысын қайталау керек екенін көрсетеді. Оған дейін платформа ешқандай баға немесе «күшті тақырып» көрсетпейді.', 'Начните с исходной диагностики: она покажет, какие навыки в порядке, а какие нужно повторить. До неё платформа не показывает никаких оценок и «сильных тем».'))) + '</p><div class="row wrap-row">' +
-        ['math', 'qc', 'sci', 'lang'].map(function (s) { return '<button class="btn ' + (s === 'math' || s === 'qc' ? 'pri' : '') + '" data-act="diag" data-v="' + s + '">' + esc(s === 'lang' ? t(L('Тілдер', 'Языки')) : t(NP.SUBJ[s])) + '</button>'; }).join('') + '</div>', 'hero') + subjCards();
+      h += card('<h2>' + esc(t(L('Әлі нәтиже жоқ', 'Пока нет результатов'))) + '</h2><p>' + esc(t(L('Күнделікті раундтан бастаңыз. Толығырақ тексеріс керек болса — бағыт бойынша диагностика. Оған дейін платформа ешқандай баға немесе «күшті тақырып» көрсетпейді.', 'Начните с тренировки дня. Если нужна подробная проверка — диагностика по направлению. До этого платформа не показывает никаких оценок и «сильных тем».'))) + '</p><div class="row wrap-row">' +
+        ['math', 'qc', 'sci', 'lang'].map(function (s) { return '<button class="btn' + '" data-act="diag" data-v="' + s + '">' + esc(t(TX.diag)) + ': ' + esc(s === 'lang' ? t(L('Тілдер', 'Языки')) : t(NP.SUBJ[s])) + '</button>'; }).join('') + '</div>') + subjCards();
     } else {
       var last = S.attempts[0], st = stats(), open = S.mistakes.filter(function (m) { return m.status !== 'fixed'; }).length;
       var due = S.mistakes.filter(function (m) { return m.status === 'later' && m.due && m.due <= Date.now(); }).length;
@@ -3246,12 +3989,14 @@ NP._assemble = function (tpl, g, r) {
     var h = h1(esc(t(TX.results)), esc(t(L('Тек сіздің нақты жауаптарыңыз негізінде. Салыстыру тек бірдей форматтағы әрекеттер арасында жасалады.', 'Только по вашим реальным ответам. Сравниваются только попытки одного формата.'))));
     if (!S.attempts.length && !S.log.length) return h + card('<h2>' + esc(t(L('Әлі нәтиже жоқ', 'Пока нет результатов'))) + '</h2><p>' + esc(t(L('Диагностикадан бастаңыз — сонда осы жерде нәтижелер мен динамика пайда болады.', 'Начните с диагностики — тогда здесь появятся результаты и динамика.'))) + '</p><a class="btn pri" href="#diag">' + esc(t(TX.diag)) + '</a>', 'hero');
     h += '<p class="note">' + esc(t(TX.disclaim)) + '</p>';
+    var dst = NP.dailyStats(S, Date.now());
+    h += card('<h2>' + esc(t(L('Күнделікті раундтар және English', 'Тренировки дня и English'))) + '</h2>' + streakLine(dst) + '<p>English: ' + (S.en && S.en.placed ? esc(t(L('деңгей ' + S.en.level + ' (шамамен ' + NP.CEFR[S.en.level] + '), деңгей көтерілді: ' + (S.en.ups || 0) + ' рет', 'уровень ' + S.en.level + ' (примерно ' + NP.CEFR[S.en.level] + '), повышений: ' + (S.en.ups || 0)))) : esc(t(L('деңгей әлі анықталмаған', 'уровень ещё не определён')))) + '</p><p class="muted sm">' + esc(t(L('Меңгерілген дағдылар (кемінде 6 жауап, 80%-дан жоғары): ', 'Освоенные навыки (не меньше 6 ответов, выше 80%): '))) + dst.mastered + '</p>' + badgesHtml(dst));
     /* попытки */
     if (S.attempts.length) h += card('<h2>' + esc(t(L('Әрекеттер', 'Попытки'))) + '</h2>' + NP.table([esc(t(TX.date)), esc(t(TX.test)), esc(t(L('Бөлімдер', 'Разделы'))), esc(t(L('Барлығы', 'Всего'))), ''], S.attempts.map(function (a) {
       return [fmtDate(a.ts), esc(kindName(a)) + (a.mode === 'study' ? ' <span class="muted sm">(' + esc(t(L('оқу', 'учебный'))) + ')</span>' : ''), a.sections.map(function (s) { return (a.sections.length > 1 ? esc(t(NP.SEC_NAME[s.key])) + ': ' : '') + s.c + '/' + s.n; }).join('<br>'), a.c + '/' + a.n + ' (' + pct(a.c, a.n) + ')', '<a href="#attempt-' + a.aid + '">' + esc(t(L('Талдау', 'Разбор'))) + '</a>'];
     })));
     /* динамика по сопоставимым попыткам */
-    var groups = {}; S.attempts.forEach(function (a) { if (a.kind === 'practice') return; var g = a.kind + '|' + a.sub + '|' + a.mode; (groups[g] = groups[g] || []).push(a); });
+    var groups = {}; S.attempts.forEach(function (a) { if (a.kind === 'practice' || a.kind === 'daily') return; var g = a.kind + '|' + a.sub + '|' + a.mode; (groups[g] = groups[g] || []).push(a); });
     var dyn = Object.keys(groups).filter(function (g) { return groups[g].length >= 2; }).map(function (g) {
       var arr = groups[g], last = arr[0], first = arr[arr.length - 1];
       var tp = function (a) { var m = {}; a.items.forEach(function (x) { (m[x.t] = m[x.t] || { n: 0, c: 0 }); m[x.t].n++; if (x.ok) m[x.t].c++; }); return m; };
@@ -3398,8 +4143,183 @@ NP._assemble = function (tpl, g, r) {
     if (!ok) return bad(t(L('Көшірмедегі жазбалардың бір бөлігі бүлінген. Импорт тоқтатылды, ағымдағы деректер өзгерген жоқ.', 'Часть записей в копии повреждена. Импорт остановлен, текущие данные не изменены.')));
     ask(esc(t(L('Ағымдағы деректер көшірмедегі деректермен ауыстырылады: ', 'Текущие данные будут заменены данными из копии: '))) + d.log.length + ' ' + esc(t(L('жауап', 'ответов'))) + ', ' + d.attempts.length + ' ' + esc(t(L('әрекет', 'попыток'))) + '.', t(L('Иә, қалпына келтіру', 'Да, восстановить')), function () {
       d.v = VERSION; if (!d.sessions) d.sessions = { full: null, test: null, practice: null }; if (!d.seen) d.seen = {};
+      if (d.sessions.daily === undefined) d.sessions.daily = null; if (!d.en) d.en = { placed: false, level: 1, hist: [], ups: 0, downs: 0 };
       S = d; save(); flash = t(L('Деректер көшірмеден қалпына келтірілді.', 'Данные восстановлены из копии.')); go('home');
     });
+  };
+
+  /* ---------------- Күнделікті раунд ---------------- */
+  var DTITLE = L('Күнделікті раунд', 'Тренировка дня');
+  var dRemain = function (ses) { return ses.items.filter(function (x) { return !x.done; }).length; };
+  var dProgress = function (ses) {
+    return '<div class="dbar" aria-hidden="true">' + ses.items.map(function (x, i) { return '<i class="' + (x.done ? 'done' : '') + (i === ses.cur ? ' cur' : '') + (i > 0 && ses.items[i - 1].r !== x.r ? ' gap' : '') + '"></i>'; }).join('') + '</div>';
+  };
+  var streakLine = function (st) {
+    if (!st.days) return '<p class="muted">' + esc(t(L('Алғашқы раундтан кейін серия мен рекорд осында көрінеді.', 'После первого раунда здесь появятся серия и рекорд.'))) + '</p>';
+    return '<div class="dstats"><div><b>' + st.streak + '</b><span>' + esc(t(L('күн қатарынан', 'дней подряд'))) + '</span></div><div><b>' + st.best + '</b><span>' + esc(t(L('ең ұзақ серия', 'лучшая серия'))) + '</span></div><div><b>' + st.record + '</b><span>' + esc(t(L('рекорд (дұрыс жауап)', 'рекорд (верных ответов)'))) + '</span></div><div><b>' + st.days + '</b><span>' + esc(t(L('барлық күн', 'всего дней'))) + '</span></div></div>';
+  };
+  var badgesHtml = function (st) {
+    return '<div class="badges">' + st.badges.map(function (b) { return '<div class="badge' + (b.got ? ' got' : '') + '"><span class="bi" aria-hidden="true">' + (b.got ? '★' : '☆') + '</span><span><b>' + esc(t(b.name)) + '</b><br><span class="muted sm">' + esc(t(b.desc)) + '</span></span></div>'; }).join('') + '</div>';
+  };
+  var dailyCard = function () {
+    var ses = S.sessions.daily, st = NP.dailyStats(S, Date.now()), h = '<h2>' + esc(t(DTITLE)) + '</h2>';
+    if (ses && !ses.finished) {
+      var it = ses.items[ses.cur];
+      h += '<p>' + esc(t(L('Аяқталмаған раунд: ', 'Незавершённая тренировка: '))) + '<b>' + esc(t(L('раунд ', 'раунд '))) + (it.r + 1) + ' / ' + ses.rounds.length + '</b> · ' + dRemain(ses) + ' ' + esc(t(L('тапсырма қалды', 'заданий осталось'))) + '</p>' + dProgress(ses) + '<div class="row wrap-row"><a class="btn pri big" href="#daily">' + esc(t(TX.resume)) + '</a></div>';
+    } else if (st.today) {
+      h += '<p>' + esc(t(L('Бүгінгі раунд орындалды. Жарайсың! Қаласаң, тағы бір қысқа раунд жасауға болады.', 'Сегодняшняя тренировка выполнена. Молодец! Если хочешь, можно пройти ещё короткий раунд.'))) + '</p><div class="row wrap-row"><button class="btn big" data-act="d-start" data-v="short">' + esc(t(L('Тағы 5 минут', 'Ещё 5 минут'))) + '</button></div>';
+    } else {
+      h += '<p>' + esc(t(L('Aiplus-тағы дайындыққа қосымша: күн сайын қысқа жаттығу. Математика, логика, ағылшын және кезекпен басқа пәндер.', 'Дополнение к занятиям в Aiplus: короткая тренировка каждый день. Математика, логика, английский и по очереди другие предметы.'))) + '</p><div class="modes"><button class="mode" data-act="d-start" data-v="short"><b>' + esc(t(L('Қысқа', 'Короткая'))) + '</b><span>≈ 5 ' + esc(t(TX.min)) + '</span><small>' + esc(t(L('3 раунд · 5 тапсырма', '3 раунда · 5 заданий'))) + '</small></button><button class="mode pri" data-act="d-start" data-v="normal"><b>' + esc(t(L('Қалыпты', 'Обычная'))) + '</b><span>≈ 10–15 ' + esc(t(TX.min)) + '</span><small>' + esc(t(L('3–4 раунд · 11 тапсырма', '3–4 раунда · 11 заданий'))) + '</small></button></div>';
+    }
+    return card(h + streakLine(st), 'dhero');
+  };
+  var viewDaily = function () {
+    var ses = S.sessions.daily;
+    if (!ses) {
+      var st = NP.dailyStats(S, Date.now()), en = S.en || {};
+      var h = h1(esc(t(DTITLE)), esc(t(L('Қысқа раундтар: алдымен жаттығу, кейін негізгі тапсырма, соңында «күннің есебі». Жылдамдық емес, дұрыс ойлау маңызды.', 'Короткие раунды: разминка, основное задание и в конце «задача дня». Важна не скорость, а правильное рассуждение.'))));
+      h += dailyCard();
+      h += card('<h2>' + esc(t(L('Не кіреді', 'Что входит'))) + '</h2><ul class="th"><li><b>' + esc(t(L('Математикалық спринт', 'Математический спринт'))) + '</b> — ' + esc(t(L('3–4 тапсырма, қиындығы біртіндеп артады', '3–4 задания с нарастающей сложностью'))) + '</li><li><b>' + esc(t(L('Логикалық квест', 'Логический квест'))) + '</b> — ' + esc(t(L('салыстыру (А және В бағандары), заңдылық, логика', 'сравнение колонок А и В, закономерности, логика'))) + '</li><li><b>English mini-round</b> — ' + esc(t(en.placed ? L('деңгей: ' + en.level + ' (шамамен ' + NP.CEFR[en.level] + ')', 'уровень: ' + en.level + ' (примерно ' + NP.CEFR[en.level] + ')') : L('алғашқы қалыпты раундта деңгей анықталады', 'в первой обычной тренировке определится уровень'))) + '</li><li><b>' + esc(t(L('Қосымша раунд', 'Дополнительный раунд'))) + '</b> — ' + esc(t(L('жаратылыстану, қазақ тілі немесе орыс тілі (күн сайын ауысады; тек қалыпты режимде)', 'естествознание, казахский или русский (меняется по дням; только в обычном режиме)'))) + '</li></ul><p class="muted sm">' + esc(t(L('Тыңдалым (аудио) бұл сайтта жоқ — ағылшын тілі тек оқу мен жазбаша тапсырмалар арқылы тексеріледі.', 'Аудирования (аудио) на сайте нет — английский проверяется только через чтение и письменные задания.'))) + '</p>');
+      h += card('<h2>' + esc(t(L('Белгілер', 'Значки'))) + '</h2>' + badgesHtml(st));
+      return h;
+    }
+    var it = ses.items[ses.cur];
+    if (!ses.intro[it.r]) return dIntro(ses, it.r);
+    return dQuestion(ses);
+  };
+  var dIntro = function (ses, ri) {
+    var rd = ses.rounds[ri], its = ses.items.filter(function (x) { return x.r === ri; });
+    var cls = { math: 's-math', logic: 's-qc', en: 's-en', sci: 's-sci', kk: 's-kk', ru: 's-ru' }[rd.kind];
+    var h = '<div class="' + cls + '" style="display:contents">' + dProgress(ses);
+    h += '<section class="card dintro"><div class="muted">' + esc(t(L('Раунд', 'Раунд'))) + ' ' + (ri + 1) + ' / ' + ses.rounds.length + '</div><h1>' + esc(t(rd.title)) + '</h1><p class="lead">' + esc(t(rd.sub)) + '</p>' +
+      '<div class="ladder">' + its.map(function (x) { return '<span class="pill' + (x.slot === 'boss' ? ' boss' : '') + '">' + esc(t(NP.SLOT[x.slot] || NP.SLOT.main)) + '</span>'; }).join('<span class="arrow" aria-hidden="true">→</span>') + '</div>' +
+      '<p>' + its.length + ' ' + esc(t(L('тапсырма', 'задания'))) + '</p>' +
+      ((ri === 0 ? ses.reasons : []).concat(rd.why || []).length ? '<div class="why"><b>' + esc(t(L('Неге бұл тапсырмалар?', 'Почему эти задания?'))) + '</b><ul>' + (ri === 0 ? ses.reasons : []).concat(rd.why || []).map(function (w) { return '<li>' + esc(t(w)) + '</li>'; }).join('') + '</ul></div>' : '') +
+      '<div class="row wrap-row"><button class="btn pri big" data-act="d-begin">' + esc(t(L('Раундты бастау', 'Начать раунд'))) + '</button>' + (ses.cur > 0 ? '<button class="btn" data-act="d-prev">← ' + esc(t(TX.back)) + '</button>' : '') + '<a class="btn ghost" href="#home">' + esc(t(L('Кейін', 'Позже'))) + '</a></div></section></div>';
+    return h;
+  };
+  var REASON_ORDER = ['topic', 'read', 'calc', 'time', 'guess', 'other'];
+  var dQuestion = function (ses) {
+    var i = ses.cur, it = ses.items[i], inst = NP.build(it.id, it.seed), rd = ses.rounds[it.r];
+    var lg = inst.fixed === 'kk' || inst.fixed === 'ru' ? inst.fixed : S.ql, Lx = inst.L[lg], Lh = inst.L[S.ql];
+    var inRound = ses.items.filter(function (x) { return x.r === it.r; }), pos = inRound.indexOf(it) + 1;
+    var cls = 's-' + inst.s;
+    var h = '<div class="' + cls + '" style="display:contents">';
+    h += '<div class="dhead"><div><div class="muted sm">' + esc(t(L('Раунд', 'Раунд'))) + ' ' + (it.r + 1) + ' / ' + ses.rounds.length + '</div><b>' + esc(t(rd.title)) + '</b></div><div class="dcount"><b>' + pos + ' / ' + inRound.length + '</b><span>' + dRemain(ses) + ' ' + esc(t(L('қалды', 'осталось'))) + '</span></div></div>' + dProgress(ses);
+    var note = inst.fixed === 'kk' ? TX.fixedKk : inst.fixed === 'ru' ? TX.fixedRu : inst.fixed === 'en' ? TX.fixedEn : null;
+    h += '<article class="qcard"><div class="qmeta"><span class="pill' + (it.slot === 'boss' ? ' boss' : '') + '">' + esc(t(NP.SLOT[it.slot] || NP.SLOT.main)) + '</span><span class="pill soft">' + esc(t(NP.TOPICS[inst.t].name)) + '</span></div>' +
+      (note && pos === 1 ? '<p class="note sm">' + esc(t(note)) + '</p>' : '') +
+      (inst.type === 'qc' ? '<p class="note sm">' + esc(lg === 'kk' ? 'A — А үлкен, B — В үлкен, C — тең, D — ақпарат жеткіліксіз.' : 'A — больше А, B — больше В, C — равны, D — недостаточно информации.') + '</p>' : '') +
+      '<div class="stem" lang="' + (inst.fixed || lg) + '">' + Lx.stem + '</div><div class="opts" role="radiogroup">' + Lx.opts.map(function (o, k) {
+        var c = 'opt' + (it.sel === k ? ' sel' : ''); if (it.done) { if (k === inst.ans) c += ' right'; else if (k === it.sel) c += ' wrongpick'; }
+        return '<button type="button" class="' + c + '" data-act="d-pick" data-v="' + k + '" role="radio" aria-checked="' + (it.sel === k) + '"' + (it.done ? ' disabled' : '') + '><span class="lt">' + optLetter[k] + '</span><span class="ot" lang="' + (inst.fixed || lg) + '">' + o + '</span></button>';
+      }).join('') + '</div>';
+    if (!it.done) {
+      h += '<div class="row wrap-row"><button class="btn pri big" data-act="d-check"' + (it.sel === null || it.sel === undefined ? ' disabled' : '') + '>' + esc(t(TX.check)) + '</button>' + (it.hint ? '' : '<button class="btn" data-act="d-hint">' + esc(t(TX.hint)) + '</button>') + '</div>';
+      if (it.hint) h += '<div class="note hint"><b>' + esc(t(TX.hint)) + ':</b> ' + Lh.h + '</div>';
+    } else {
+      var ok = it.sel === inst.ans;
+      h += '<div class="fb ' + (ok ? 'good' : 'badc') + '"><div class="fb-h">' + esc(t(ok ? L('Дұрыс!', 'Верно!') : L('Қате, бірақ бұл — үйренудің бөлігі', 'Неверно, но это часть учёбы'))) + '</div>';
+      if (!ok) h += '<p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[inst.ans] + ') ' + Lx.opts[inst.ans] + '</p>';
+      h += '<p><b>' + esc(t(TX.expl)) + ':</b> ' + Lh.e + '</p>';
+      if (!ok && Lh.whys[it.sel]) h += '<p><b>' + esc(t(L('Мүмкін қате', 'Возможная ошибка'))) + ':</b> ' + Lh.whys[it.sel] + '</p>';
+      if (ok) { var tk = Lh.whys.findIndex(function (w, j) { return j !== inst.ans && w; }); if (tk >= 0) h += '<p><b>' + esc(t(TX.trap)) + ' (' + optLetter[tk] + '):</b> ' + Lh.whys[tk] + '</p>'; }
+      if (it.enChange) h += '<p class="note">' + esc(t(it.enChange === 'up' ? L('English деңгейі көтерілді: енді ' + S.en.level + '-деңгей.', 'Уровень English повышен: теперь ' + S.en.level + '.') : L('English тапсырмалары уақытша сәл жеңілірек болады (' + S.en.level + '-деңгей). Бұл қалыпты жағдай.', 'Задания English временно станут чуть проще (уровень ' + S.en.level + '). Это нормально.'))) + '</p>';
+      if (!ok && it.mid) {
+        var m = S.mistakes.filter(function (x) { return x.mid === it.mid; })[0];
+        h += '<div class="reasons"><b>' + esc(t(L('Неге қателестің?', 'Почему ошибся?'))) + '</b><div class="chips">' + REASON_ORDER.map(function (k) { return '<button type="button" class="chip' + (m && m.reason === k ? ' on' : '') + '" data-act="d-reason" data-v="' + k + '" aria-pressed="' + !!(m && m.reason === k) + '">' + esc(t(REASONS[k])) + '</button>'; }).join('') + '</div><p class="muted sm">' + esc(t(L('Қате журналға жазылды. Бұл дағды келесі күндері жаңа тапсырмамен қайта тексеріледі.', 'Ошибка записана в журнал. Этот навык проверим снова в следующие дни на новом задании.'))) + '</p></div>';
+      }
+      if (!it.simAdded) h += '<button class="btn" data-act="d-similar">+ ' + esc(t(L('Ұқсас тапсырма қазір', 'Похожее задание сейчас'))) + '</button>';
+      h += '</div>';
+    }
+    h += '</article>';
+    var last = i === ses.items.length - 1, nextRound = !last && ses.items[i + 1].r !== it.r;
+    h += '<div class="navbar"><button class="btn" data-act="d-prev"' + (i === 0 ? ' disabled' : '') + '>← ' + esc(t(TX.back)) + '</button><span></span><button class="btn pri" data-act="d-next"' + (it.done ? '' : ' disabled') + '>' + esc(t(last ? L('Аяқтау', 'Завершить') : nextRound ? L('Келесі раунд', 'Следующий раунд') : TX.next)) + ' →</button></div>';
+    h += '<div class="row wrap-row endrow"><a class="btn ghost" href="#home">' + esc(t(L('Кейін жалғастыру', 'Продолжить позже'))) + '</a></div></div>';
+    return h;
+  };
+  var startDaily = function (mode) {
+    var now = Date.now(), d = NP.buildDaily(S, mode, now, (now ^ Math.floor(Math.random() * 1e9)) >>> 0);
+    var ses = { sid: NP.uid(), kind: 'daily', dmode: mode, created: now, date: dayKey(now), rounds: d.rounds, reasons: d.reasons, estMin: d.estMin, placement: d.placement,
+      items: d.items.map(function (x) { return { id: x.id, seed: x.seed, s: x.s, r: x.r, slot: x.slot, sel: null, done: false, hint: false, mid: null }; }), cur: 0, intro: {}, elapsed: 0, finished: null };
+    var cur = S.sessions.daily;
+    var doit = function () { S.sessions.daily = ses; save(); go('daily'); };
+    if (cur && !cur.finished && cur.items.some(function (x) { return x.done; })) ask(esc(t(L('Аяқталмаған раунд жабылады. Берілген жауаптар журналда сақталады. Жаңасын бастау керек пе?', 'Незавершённая тренировка закроется. Уже данные ответы сохранены в журнале. Начать новую?'))), t(L('Иә, бастау', 'Да, начать')), doit);
+    else doit();
+  };
+  var finishDaily = function () {
+    var ses = S.sessions.daily; if (!ses) return;
+    var before = NP.dailyStats(S, Date.now()).badges.filter(function (b) { return b.got; }).map(function (b) { return b.id; });
+    var items = ses.items.map(function (x) { var inst = NP.build(x.id, x.seed); return { id: x.id, seed: x.seed, s: inst.s, t: inst.t, k: inst.k, sel: x.sel, ans: inst.ans, ok: x.sel === inst.ans, sec: 'all', slot: x.slot, r: x.r }; });
+    var c = items.filter(function (x) { return x.ok; }).length, aid = NP.uid();
+    var a = { aid: aid, kind: 'daily', sub: ses.dmode, title: DTITLE, mode: 'study', ts: Date.now(), dur: ses.elapsed, sections: [{ key: 'all', c: c, n: items.length }], items: items, c: c, n: items.length, flags: {}, rounds: ses.rounds.map(function (r) { return { title: r.title, kind: r.kind }; }), enPlaced: ses.enPlaced || null, enLevel: S.en ? S.en.level : null };
+    S.attempts.unshift(a);
+    var after = NP.dailyStats(S, Date.now()).badges.filter(function (b) { return b.got && before.indexOf(b.id) < 0; }).map(function (b) { return b.id; });
+    a.newBadges = after; S.sessions.daily = null; save(); stopDTimer(); go('dsum-' + aid);
+  };
+  var viewDSum = function (aid) {
+    var a = S.attempts.filter(function (x) { return x.aid === aid; })[0]; if (!a) return viewDaily();
+    var st = NP.dailyStats(S, Date.now());
+    var h = h1(esc(t(L('Раунд аяқталды!', 'Тренировка завершена!'))), esc(t(L('Ең бастысы — күн сайын аздап. Нәтиже тек өзіңмен салыстырылады.', 'Главное — понемногу каждый день. Результат сравнивается только с тобой.'))));
+    h += '<div class="grid3">' + card('<div class="k">' + esc(t(TX.c)) + '</div><div class="big">' + a.c + ' / ' + a.n + '</div>', 'stat') + card('<div class="k">' + esc(t(L('Серия', 'Серия'))) + '</div><div class="big">' + st.streak + '</div><div class="muted">' + esc(t(L('күн қатарынан', 'дней подряд'))) + '</div>', 'stat') + card('<div class="k">' + esc(t(L('Уақыт', 'Время'))) + '</div><div class="big">' + Math.max(1, Math.round((a.dur || 0) / 60000)) + ' ' + esc(t(TX.min)) + '</div><div class="muted">' + esc(t(L('тек ақпарат үшін', 'просто для информации'))) + '</div>', 'stat') + '</div>';
+    h += card('<h2>' + esc(t(L('Раундтар бойынша', 'По раундам'))) + '</h2>' + NP.table([esc(t(L('Раунд', 'Раунд'))), esc(t(TX.c))], (a.rounds || []).map(function (r, ri) { var xs = a.items.filter(function (x) { return x.r === ri; }); return [esc(t(r.title)), xs.filter(function (x) { return x.ok; }).length + ' / ' + xs.length]; })));
+    if (a.enPlaced) h += card('<h2>English</h2><p>' + esc(t(L('Сенің бастапқы деңгейің: ' + a.enPlaced + ' (шамамен ' + NP.CEFR[a.enPlaced] + '). Бұл 6 тапсырмаға негізделген алғашқы баға — келесі раундтарда ол нақтыланады.', 'Твой стартовый уровень: ' + a.enPlaced + ' (примерно ' + NP.CEFR[a.enPlaced] + '). Это первая оценка по 6 заданиям — дальше она уточнится.'))) + '</p>');
+    var wr = {}; a.items.forEach(function (x) { if (!x.ok) wr[x.s + ':' + x.k] = x; });
+    var wk = Object.keys(wr);
+    h += card('<h2>' + esc(t(L('Келесі раундтарда қайталаймыз', 'Повторим в следующих тренировках'))) + '</h2>' + (wk.length ? '<div class="chips">' + wk.map(function (k) { var x = wr[k]; return '<a class="chip" href="#learn-' + x.t + '">' + esc(t(NP.TOPICS[x.t].name)) + ' · ' + esc(t(NP.SKILL[x.k] || L(x.k, x.k))) + '</a>'; }).join('') + '</div><p class="muted sm">' + esc(t(L('Бұл дағдылар бір дұрыс жауаптан кейін «түзетілді» деп белгіленбейді — оларды кейін тағы тексереміз.', 'Эти навыки не считаются исправленными после одного верного ответа — проверим их ещё раз позже.'))) + '</p>' : '<p>' + esc(t(L('Бүгін қате жоқ. Жарайсың!', 'Сегодня без ошибок. Молодец!'))) + '</p>'));
+    if (a.newBadges && a.newBadges.length) h += card('<h2>' + esc(t(L('Жаңа белгі', 'Новый значок'))) + '</h2>' + badgesHtml({ badges: st.badges.filter(function (b) { return a.newBadges.indexOf(b.id) >= 0; }) }), 'hl');
+    h += '<div class="row wrap-row"><a class="btn pri big" href="#home">' + esc(t(TX.home)) + '</a><a class="btn" href="#mistakes">' + esc(t(TX.mistakes)) + '</a><a class="btn" href="#attempt-' + a.aid + '">' + esc(t(L('Барлық тапсырма', 'Все задания'))) + '</a></div>';
+    return h;
+  };
+  var dTimer = null, dLast = 0;
+  var startDTimer = function () {
+    if (dTimer) return; dLast = Date.now();
+    dTimer = setInterval(function () {
+      var ses = S.sessions.daily; if (!ses || route() !== 'daily') { stopDTimer(); return; }
+      var now = Date.now(); ses.elapsed = (ses.elapsed || 0) + Math.min(now - dLast, 5000); dLast = now;
+      if (Math.floor(now / 1000) % 10 === 0) save();
+    }, 1000);
+  };
+  var stopDTimer = function () { if (dTimer) clearInterval(dTimer); dTimer = null; };
+  var dAct = function (a, v) {
+    var ses = S.sessions.daily; if (!ses && a !== 'd-start') return false;
+    var it = ses ? ses.items[ses.cur] : null;
+    switch (a) {
+      case 'd-start': startDaily(v); return true;
+      case 'd-begin': ses.intro[it.r] = true; save(); render(); window.scrollTo(0, 0); return true;
+      case 'd-pick': if (!it.done) { it.sel = +v; save(); render(); } return true;
+      case 'd-hint': it.hint = true; save(); render(); return true;
+      case 'd-check':
+        if (it.done || it.sel === null || it.sel === undefined) return true;
+        var inst = NP.build(it.id, it.seed), tpl = NP.byId[it.id];
+        it.done = true; it.ok = record(it, inst, it.sel, 'daily', DTITLE); it.mid = record.lastMid || null;
+        var rd = ses.rounds[it.r];
+        if (tpl.t === 'enmini') {
+          if (rd.place) { var pl = ses.items.filter(function (x) { return x.r === it.r; }); if (pl.every(function (x) { return x.done; })) ses.enPlaced = NP.enPlace(S, pl.map(function (x) { return { id: x.id, ok: x.ok }; })); }
+          else it.enChange = NP.enAfter(S, tpl, it.ok);
+        }
+        save(); render(); return true;
+      case 'd-reason':
+        var m = S.mistakes.filter(function (x) { return x.mid === it.mid; })[0];
+        if (m) { m.reason = v; if (m.status === 'new') m.status = 'work'; save(); render(); } return true;
+      case 'd-similar':
+        var base = NP.byId[it.id], stat = base.g.length === 0, pick = base;
+        if (stat) {
+          var inS = {}; ses.items.forEach(function (x) { inS[x.id] = 1; });
+          var cands = NP.TPL.filter(function (x) { return x.t === base.t && !inS[x.id] && (!base.lv || Math.abs((x.lv || 1) - base.lv) <= 1); });
+          pick = cands.filter(function (x) { return x.k === base.k; })[0] || cands[0];
+        }
+        if (!pick) { flash = t(L('Бұл тақырыпта жаңа ұқсас тапсырма қалмады.', 'В этой теме больше нет новых похожих заданий.')); render(); return true; }
+        it.simAdded = true;
+        ses.items.splice(ses.cur + 1, 0, { id: pick.id, seed: stat ? 1 : Math.floor(Math.random() * 2e9) + 1, s: pick.s, r: it.r, slot: 'similar', sel: null, done: false, hint: false, mid: null });
+        ses.cur++; flash = null; save(); render(); window.scrollTo(0, 0); return true;
+      case 'd-next':
+        if (!it.done) return true;
+        if (ses.cur >= ses.items.length - 1) { finishDaily(); return true; }
+        ses.cur++; save(); render(); window.scrollTo(0, 0); return true;
+      case 'd-prev': if (ses.cur > 0) { ses.cur--; ses.intro[ses.items[ses.cur].r] = true; save(); render(); window.scrollTo(0, 0); } return true;
+    }
+    return false;
   };
 
   /* ---------------- Рендер ---------------- */
@@ -3418,9 +4338,12 @@ NP._assemble = function (tpl, g, r) {
     else if (r === 'mistakes') main = viewMistakes();
     else if (r === 'plan') main = viewPlan();
     else if (r === 'data') main = viewData();
+    else if (r === 'daily') main = viewDaily();
+    else if (r.indexOf('dsum-') === 0) main = viewDSum(r.slice(5));
     else main = viewHome();
     document.getElementById('app').innerHTML = shell(main);
     if (r.indexOf('run-') === 0 && S.sessions[r.slice(4)] && !tickTimer) startTicker();
+    if (r === 'daily' && S.sessions.daily) startDTimer(); else stopDTimer();
   };
 
   /* ---------------- События ---------------- */
@@ -3431,6 +4354,7 @@ NP._assemble = function (tpl, g, r) {
     var ses = curSlot ? S.sessions[curSlot] : null;
     switch (a) {
       case 'ui': S.ui = v; save(); render(); break;
+      case 'd-start': case 'd-begin': case 'd-pick': case 'd-hint': case 'd-check': case 'd-reason': case 'd-similar': case 'd-next': case 'd-prev': dAct(a, v); break;
       case 'ql': S.ql = v; save(); render(); break;
       case 'modal-no': modal = null; render(); break;
       case 'modal-yes': var f = modal && modal.onYes; modal = null; if (f) f(); else render(); break;
