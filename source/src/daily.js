@@ -81,6 +81,7 @@
     if (!ls) s += 1.2; else { var d = (A.now - ls) / DAY; s += d < 1 ? -1.6 : Math.min(d, 10) * 0.15; }
     var ta = A.tAcc[t.t]; if (ta && ta.n >= 3 && ta.c / ta.n < 0.6) s += 0.8;
     if (opt.review && A.due[skillKey(t.s, t.k)]) s += 5;
+    if (opt.prefer && opt.prefer(t)) s += 3;
     return s;
   };
   var pick = function (pool, A, r, opt, used) {
@@ -94,7 +95,7 @@
     used.ids[best.id] = 1; used.topics[best.t] = 1; used.skills[best.k] = 1;
     return best;
   };
-  var item = function (t, r, ri, slot) { return { id: t.id, seed: r.int(1, 2e9), s: t.s, r: ri, slot: slot }; };
+  var item = function (t, r, ri, slot, typed) { var o = { id: t.id, seed: r.int(1, 2e9), s: t.s, r: ri, slot: slot }; if (typed) o.typed = true; return o; };
   var nm = function (o, lg) { return o[lg]; };
   var tName = function (t) { return NP.TOPICS[t] ? NP.TOPICS[t].name : L(t, t); };
 
@@ -103,7 +104,7 @@
     var rounds = [], items = [], reasons = [], short = mode === 'short';
     var lowData = S.log.length < 15;
     if (lowData) reasons.push(L('Әзірге дерек жеткіліксіз — тағы бірнеше раунд өт, сонда тапсырмалар саған дәлірек таңдалады.', 'Пока недостаточно данных — пройди ещё несколько раундов, и задания будут подбираться точнее.'));
-    var addRound = function (meta, list) { var ri = rounds.length; meta.n = list.length; rounds.push(meta); list.forEach(function (x) { items.push(item(x.t, r, ri, x.slot)); }); };
+    var addRound = function (meta, list) { var ri = rounds.length; meta.n = list.length; rounds.push(meta); list.forEach(function (x) { items.push(item(x.t, r, ri, x.slot, x.typed)); }); };
     var reviewNote = function (t) {
       var tn = tName(t.t), rec = A.recentErrTopics[t.t];
       return rec && A.nDaily >= 2 ? L('«' + tn.kk + '» тақырыбына қайталау қосылды, өйткені соңғы екі сабақта осы жерде қате болды.', 'Добавили повторение по теме «' + tn.ru + '», потому что в последних двух занятиях здесь были ошибки.')
@@ -113,14 +114,15 @@
     /* 1. Математикалық спринт */
     var cm = A.comfort(['math']), stretch = cm.n >= 6 && cm.c / cm.n >= 0.75, easier = cm.n >= 6 && cm.c / cm.n < 0.45;
     var used = { ids: {}, topics: {}, skills: {} }, mlist = [], why = [];
-    mlist.push({ t: pick(P.math, A, r, { d: [1] }, used), slot: 'warm' });
+    mlist.push({ t: pick(P.math, A, r, { d: stretch ? [2] : [1] }, used), slot: 'warm' });
     var placeDay = !(S.en && S.en.placed) && !short;
     var rv = pick(P.math, A, r, { d: [2], review: true }, used) || pick(P.math, A, r, { d: [3], review: true }, used);
     if (rv) { mlist.push({ t: rv, slot: 'review' }); why.push(reviewNote(rv)); }
     else mlist.push({ t: pick(P.math, A, r, { d: [2] }, used), slot: 'main' });
     if (!short) {
       if (!placeDay) mlist.push({ t: pick(P.math, A, r, { d: stretch ? [3] : [2] }, used), slot: 'hard' });
-      mlist.push({ t: pick(P.math, A, r, { d: [3] }, used), slot: 'boss' });
+      mlist.push({ t: pick(P.math, A, r, { d: [3], prefer: stretch ? function (t) { return t.plus; } : null }, used), slot: 'boss', typed: true });
+      why.push(L('«Күннің есебінде» жауапты нұсқасыз, өзің жазасың — Aiplus-тағыдай.', 'В «задаче дня» ответ нужно вписать самому, без вариантов — как в Aiplus.'));
     }
     if (stretch) why.push(L('Соңғы математика тапсырмаларының ' + Math.round(cm.c / cm.n * 100) + '%-ы дұрыс — бүгін бір тапсырма қиынырақ.', 'Последние задания по математике решены на ' + Math.round(cm.c / cm.n * 100) + '% — сегодня одно задание сложнее.'));
     if (easier) why.push(L('Соңғы тапсырмалар қиын болды, сондықтан бүгін «Қиынырақ» тапсырма орта деңгейде.', 'Последние задания давались трудно, поэтому сегодня «Посложнее» — среднего уровня.'));

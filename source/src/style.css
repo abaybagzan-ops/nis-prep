@@ -254,3 +254,10 @@ svg .bar { fill: var(--sc, var(--accent)); }
 .reasons { margin-top: 10px; } .reasons .chips { margin: 8px 0; }
 .chip { cursor: pointer; font: inherit; font-size: .88rem; } .chip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 @media (max-width: 560px) { .dstats { grid-template-columns: 1fr 1fr; } .modes { grid-template-columns: 1fr 1fr; } .mode { min-height: 88px; padding: 12px; } .dhead { padding: 8px 12px; } }
+
+svg .gline { stroke: var(--sc, var(--accent)); } svg .gdot { fill: var(--sc, var(--accent)); }
+.typed { margin: 4px 0 10px; }
+.tin { display: flex; align-items: center; gap: 10px; max-width: 340px; }
+.tin input { flex: 1; min-width: 0; font: inherit; font-size: 1.35rem; font-weight: 700; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); }
+.tin input:focus { outline: none; border-color: var(--accent); }
+.tin .unit { font-size: 1.15rem; font-weight: 600; color: var(--muted); }

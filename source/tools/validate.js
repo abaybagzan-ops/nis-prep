@@ -1,7 +1,7 @@
 /* Автоматическая проверка банка заданий. Запуск: node tools/validate.js */
 const path = require('path');
 const src = path.join(__dirname, '..', 'src');
-['core', 'bank_math', 'bank_qc', 'bank_sci', 'bank_lang', 'bank_short', 'bank_pack1', 'lessons', 'exam', 'daily'].forEach(f => { try { require(path.join(src, f + '.js')); } catch (e) { if (f !== 'exam' && f !== 'daily') throw e; } });
+['core', 'bank_math', 'bank_qc', 'bank_sci', 'bank_lang', 'bank_short', 'bank_pack1', 'bank_hard', 'lessons', 'exam', 'daily'].forEach(f => { try { require(path.join(src, f + '.js')); } catch (e) { if (f !== 'exam' && f !== 'daily') throw e; } });
 const NP = globalThis.NP;
 const KZ = /[әғқңөұүһіӘҒҚҢӨҰҮҺІ]/;
 let errors = [], warns = [];
@@ -24,6 +24,7 @@ NP.TPL.forEach(t => {
       all.forEach(x => { if (badWords.test(String(x))) errors.push(`${t.id} [${lg}] seed ${seed}: «${String(x).slice(0, 80)}»`); });
       if (Lg.opts.length !== 4) errors.push(`${t.id}: вариантов не 4`);
       if (!Lg.e || !Lg.h) errors.push(`${t.id} [${lg}]: нет объяснения или подсказки`);
+      if (/[+−-] 0(?![,\d])[^\d]/.test(plain(Lg.stem) + ' ')) errors.push(`${t.id} [${lg}] seed ${seed}: «+ 0» в условии: «${plain(Lg.stem).slice(0, 80)}»`);
       Lg.whys.forEach((w, i) => { if (i !== inst.ans && !w) errors.push(`${t.id} [${lg}]: нет разбора для неверного варианта ${i}`); });
       // Ключ, встречающийся в объяснении (для расчётных заданий)
       if (inst.type === 'mc' && (t.s === 'math')) {

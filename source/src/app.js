@@ -88,7 +88,7 @@
     });
     if (!ok) {
       record.lastMid = NP.uid();
-      S.mistakes.unshift({ mid: record.lastMid, ts: now, test: title, src: src, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, sel: sel === undefined ? null : sel, ans: inst.ans, snap: snap(inst), reason: null, next: null, status: 'new', checks: [], due: null });
+      S.mistakes.unshift({ mid: record.lastMid, ts: now, test: title, src: src, id: it.id, seed: it.seed, s: inst.s, t: inst.t, k: inst.k, sel: sel === undefined ? null : sel, typed: it.typedText || null, ans: inst.ans, snap: snap(inst), reason: null, next: null, status: 'new', checks: [], due: null });
     }
     return ok;
   };
@@ -291,6 +291,12 @@
   var jump = function (i) { var ses = S.sessions[curSlot]; if (!ses || i < 0 || i >= ses.items.length) return; ses.cur = i; flash = null; save(); render(); };
 
   var optLetter = 'ABCD';
+  /* «Ваш ответ»: вариант или вписанное число (sel = −1 — вписан ответ, которого нет среди вариантов) */
+  var yourAns = function (sel, opts, typed) {
+    if (typed) return esc(typed) + (sel >= 0 ? ' (= ' + optLetter[sel] + ')' : '');
+    if (sel === null || sel === undefined || sel < 0) return esc(t(TX.noAns));
+    return optLetter[sel] + ') ' + opts[sel];
+  };
   var viewRun = function (slot) {
     var ses = S.sessions[slot];
     if (!ses) return card('<p>' + esc(t(L('Белсенді тест жоқ.', 'Нет активного теста.'))) + '</p><a class="btn" href="#home">' + esc(t(TX.home)) + '</a>');
@@ -394,7 +400,7 @@
       a.items.map(function (x, i) {
         if (only && x.ok) return '';
         var inst = NP.build(x.id, x.seed), lg = inst.fixed === 'kk' || inst.fixed === 'ru' ? inst.fixed : S.ql, Lx = inst.L[lg], Lh = inst.L[S.ql];
-        return '<details class="ri ' + (x.ok ? 'okc' : 'badc') + '"><summary><span class="rn">' + (i + 1) + '</span> ' + (x.ok ? '✓' : '✗') + ' <span class="muted">' + esc(t(NP.TOPICS[x.t].name)) + '</span>' + (a.flags && a.flags[i] ? ' ⚑' : '') + '</summary><div class="stem">' + Lx.stem + '</div><p><b>' + esc(t(TX.yours)) + ':</b> ' + (x.sel === null ? esc(t(TX.noAns)) : optLetter[x.sel] + ') ' + Lx.opts[x.sel]) + '</p><p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[x.ans] + ') ' + Lx.opts[x.ans] + '</p><p><b>' + esc(t(TX.expl)) + ':</b> ' + Lh.e + '</p>' + (x.sel !== null && !x.ok && Lh.whys[x.sel] ? '<p><b>' + esc(t(TX.whyWrong)) + ':</b> ' + Lh.whys[x.sel] + '</p>' : '') + '</details>';
+        return '<details class="ri ' + (x.ok ? 'okc' : 'badc') + '"><summary><span class="rn">' + (i + 1) + '</span> ' + (x.ok ? '✓' : '✗') + ' <span class="muted">' + esc(t(NP.TOPICS[x.t].name)) + '</span>' + (a.flags && a.flags[i] ? ' ⚑' : '') + '</summary><div class="stem">' + Lx.stem + '</div><p><b>' + esc(t(TX.yours)) + ':</b> ' + yourAns(x.sel, Lx.opts, x.typed) + '</p><p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[x.ans] + ') ' + Lx.opts[x.ans] + '</p><p><b>' + esc(t(TX.expl)) + ':</b> ' + Lh.e + '</p>' + (x.sel !== null && x.sel >= 0 && !x.ok && Lh.whys[x.sel] ? '<p><b>' + esc(t(TX.whyWrong)) + ':</b> ' + Lh.whys[x.sel] + '</p>' : '') + '</details>';
       }).join('') + '</div>');
     h += '<div class="row wrap-row"><a class="btn pri" href="#mistakes">' + esc(t(TX.mistakes)) + '</a><a class="btn" href="#results">' + esc(t(TX.results)) + '</a></div>';
     return h;
@@ -461,7 +467,7 @@
       var dueTx = m.status === 'later' && m.due ? ' · ' + esc(t(L('Келесі тексеріс: ', 'Следующая проверка: '))) + fmtDate(m.due) : '';
       return '<details class="mcard st-' + m.status + '"><summary><span class="pill st">' + esc(t(STATUS[m.status])) + '</span> <b>' + esc(t(NP.TOPICS[m.t].name)) + '</b> <span class="muted sm">· ' + esc(t(NP.SKILL[m.k] || L(m.k, m.k))) + ' · ' + fmtDate(m.ts) + '</span></summary>' +
         '<p class="muted sm">' + esc(t(m.test)) + ' · ' + esc(t(NP.SUBJ[m.s])) + ' · ' + esc(t(L('Тексерістер: ', 'Проверок: '))) + m.checks.length + dueTx + '</p>' +
-        '<div class="stem">' + sn.stem + '</div><p><b>' + esc(t(TX.yours)) + ':</b> ' + (m.sel === null ? esc(t(TX.noAns)) : optLetter[m.sel] + ') ' + sn.opts[m.sel]) + '</p><p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[m.ans] + ') ' + sn.opts[m.ans] + '</p><p><b>' + esc(t(TX.expl)) + ':</b> ' + sh.e + '</p>' + (m.sel !== null && sh.whys[m.sel] ? '<p><b>' + esc(t(TX.whyWrong)) + ':</b> ' + sh.whys[m.sel] + '</p>' : '') +
+        '<div class="stem">' + sn.stem + '</div><p><b>' + esc(t(TX.yours)) + ':</b> ' + yourAns(m.sel, sn.opts, m.typed) + '</p><p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[m.ans] + ') ' + sn.opts[m.ans] + '</p><p><b>' + esc(t(TX.expl)) + ':</b> ' + sh.e + '</p>' + (m.sel !== null && m.sel >= 0 && sh.whys[m.sel] ? '<p><b>' + esc(t(TX.whyWrong)) + ':</b> ' + sh.whys[m.sel] + '</p>' : '') +
         '<div class="mrow"><label>' + esc(t(L('Себебі', 'Причина'))) + ' <select data-act="m-reason" data-v="' + m.mid + '"><option value="">—</option>' + Object.keys(REASONS).map(function (k) { return '<option value="' + k + '"' + (m.reason === k ? ' selected' : '') + '>' + esc(t(REASONS[k])) + '</option>'; }).join('') + '</select></label>' +
         '<label>' + esc(t(L('Келесі қадам', 'Следующий шаг'))) + ' <select data-act="m-next" data-v="' + m.mid + '"><option value="">—</option>' + Object.keys(NEXT).map(function (k) { return '<option value="' + k + '"' + (m.next === k ? ' selected' : '') + '>' + esc(t(NEXT[k])) + '</option>'; }).join('') + '</select></label></div>' +
         '<div class="row wrap-row"><a class="btn" href="#learn-' + m.t + '">' + esc(t(NEXT.lesson)) + '</a><button class="btn pri" data-act="m-series" data-v="' + m.mid + '">' + esc(t(NEXT.series)) + '</button>' + (m.status === 'new' ? '<button class="btn ghost" data-act="m-work" data-v="' + m.mid + '">' + esc(t(L('Жұмысқа алу', 'Взять в работу'))) + '</button>' : '') + '</div></details>';
@@ -620,26 +626,33 @@
     var i = ses.cur, it = ses.items[i], inst = NP.build(it.id, it.seed), rd = ses.rounds[it.r];
     var lg = inst.fixed === 'kk' || inst.fixed === 'ru' ? inst.fixed : S.ql, Lx = inst.L[lg], Lh = inst.L[S.ql];
     var inRound = ses.items.filter(function (x) { return x.r === it.r; }), pos = inRound.indexOf(it) + 1;
-    var cls = 's-' + inst.s;
+    var cls = 's-' + inst.s, typed = it.typed && NP.typedOK(inst, lg), au = typed ? NP.numVal(Lx.opts[inst.ans]) : null;
     var h = '<div class="' + cls + '" style="display:contents">';
     h += '<div class="dhead"><div><div class="muted sm">' + esc(t(L('Раунд', 'Раунд'))) + ' ' + (it.r + 1) + ' / ' + ses.rounds.length + '</div><b>' + esc(t(rd.title)) + '</b></div><div class="dcount"><b>' + pos + ' / ' + inRound.length + '</b><span>' + dRemain(ses) + ' ' + esc(t(L('қалды', 'осталось'))) + '</span></div></div>' + dProgress(ses);
     var note = inst.fixed === 'kk' ? TX.fixedKk : inst.fixed === 'ru' ? TX.fixedRu : inst.fixed === 'en' ? TX.fixedEn : null;
     h += '<article class="qcard"><div class="qmeta"><span class="pill' + (it.slot === 'boss' ? ' boss' : '') + '">' + esc(t(NP.SLOT[it.slot] || NP.SLOT.main)) + '</span><span class="pill soft">' + esc(t(NP.TOPICS[inst.t].name)) + '</span></div>' +
       (note && pos === 1 ? '<p class="note sm">' + esc(t(note)) + '</p>' : '') +
       (inst.type === 'qc' ? '<p class="note sm">' + esc(lg === 'kk' ? 'A — А үлкен, B — В үлкен, C — тең, D — ақпарат жеткіліксіз.' : 'A — больше А, B — больше В, C — равны, D — недостаточно информации.') + '</p>' : '') +
-      '<div class="stem" lang="' + (inst.fixed || lg) + '">' + Lx.stem + '</div><div class="opts" role="radiogroup">' + Lx.opts.map(function (o, k) {
+      '<div class="stem" lang="' + (inst.fixed || lg) + '">' + Lx.stem + '</div>' + (typed && !it.done ? '' : '<div class="opts" role="radiogroup">' + Lx.opts.map(function (o, k) {
         var c = 'opt' + (it.sel === k ? ' sel' : ''); if (it.done) { if (k === inst.ans) c += ' right'; else if (k === it.sel) c += ' wrongpick'; }
         return '<button type="button" class="' + c + '" data-act="d-pick" data-v="' + k + '" role="radio" aria-checked="' + (it.sel === k) + '"' + (it.done ? ' disabled' : '') + '><span class="lt">' + optLetter[k] + '</span><span class="ot" lang="' + (inst.fixed || lg) + '">' + o + '</span></button>';
-      }).join('') + '</div>';
-    if (!it.done) {
+      }).join('') + '</div>');
+    if (!it.done && typed) {
+      h += '<div class="typed"><p class="note sm">' + esc(t(L('Нұсқа жоқ: есепті шығарып, жауапты өзің жаз.', 'Вариантов нет: реши задачу и впиши ответ сам.'))) + ' ' + esc(t(L('Бөлшекті 3/4 немесе 2 1/4 түрінде, ондық бөлшекті 2,5 түрінде жаз.', 'Дробь пиши как 3/4 или 2 1/4, десятичную — как 2,5.'))) + '</p>' +
+        '<label class="tin"><input id="d-typed" type="text" inputmode="text" autocomplete="off" enterkeyhint="done" value="' + esc(it.typedText || '') + '" aria-label="' + esc(t(L('Жауап', 'Ответ'))) + '">' + (au.unit ? '<span class="unit">' + esc(au.unit) + '</span>' : '') + '</label>' +
+        (it.badInput ? '<p class="note sm warn">' + esc(t(L('Санды жаз, мысалы: 12, −3, 2,5 немесе 3/4.', 'Впиши число, например: 12, −3, 2,5 или 3/4.'))) + '</p>' : '') + '</div>';
+      h += '<div class="row wrap-row"><button class="btn pri big" data-act="d-check">' + esc(t(TX.check)) + '</button>' + (it.hint ? '' : '<button class="btn" data-act="d-hint">' + esc(t(TX.hint)) + '</button>') + '<button class="btn ghost" data-act="d-showopts">' + esc(t(L('Нұсқаларды көрсету', 'Показать варианты'))) + '</button></div>';
+      if (it.hint) h += '<div class="note hint"><b>' + esc(t(TX.hint)) + ':</b> ' + Lh.h + '</div>';
+    } else if (!it.done) {
       h += '<div class="row wrap-row"><button class="btn pri big" data-act="d-check"' + (it.sel === null || it.sel === undefined ? ' disabled' : '') + '>' + esc(t(TX.check)) + '</button>' + (it.hint ? '' : '<button class="btn" data-act="d-hint">' + esc(t(TX.hint)) + '</button>') + '</div>';
       if (it.hint) h += '<div class="note hint"><b>' + esc(t(TX.hint)) + ':</b> ' + Lh.h + '</div>';
     } else {
       var ok = it.sel === inst.ans;
       h += '<div class="fb ' + (ok ? 'good' : 'badc') + '"><div class="fb-h">' + esc(t(ok ? L('Дұрыс!', 'Верно!') : L('Қате, бірақ бұл — үйренудің бөлігі', 'Неверно, но это часть учёбы'))) + '</div>';
+      if (it.typedText) h += '<p><b>' + esc(t(TX.yours)) + ':</b> ' + esc(it.typedText) + '</p>';
       if (!ok) h += '<p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[inst.ans] + ') ' + Lx.opts[inst.ans] + '</p>';
       h += '<p><b>' + esc(t(TX.expl)) + ':</b> ' + Lh.e + '</p>';
-      if (!ok && Lh.whys[it.sel]) h += '<p><b>' + esc(t(L('Мүмкін қате', 'Возможная ошибка'))) + ':</b> ' + Lh.whys[it.sel] + '</p>';
+      if (!ok && it.sel >= 0 && Lh.whys[it.sel]) h += '<p><b>' + esc(t(L('Мүмкін қате', 'Возможная ошибка'))) + ':</b> ' + Lh.whys[it.sel] + '</p>';
       if (ok) { var tk = Lh.whys.findIndex(function (w, j) { return j !== inst.ans && w; }); if (tk >= 0) h += '<p><b>' + esc(t(TX.trap)) + ' (' + optLetter[tk] + '):</b> ' + Lh.whys[tk] + '</p>'; }
       if (it.enChange) h += '<p class="note">' + esc(t(it.enChange === 'up' ? L('English деңгейі көтерілді: енді ' + S.en.level + '-деңгей.', 'Уровень English повышен: теперь ' + S.en.level + '.') : L('English тапсырмалары уақытша сәл жеңілірек болады (' + S.en.level + '-деңгей). Бұл қалыпты жағдай.', 'Задания English временно станут чуть проще (уровень ' + S.en.level + '). Это нормально.'))) + '</p>';
       if (!ok && it.mid) {
@@ -658,7 +671,7 @@
   var startDaily = function (mode) {
     var now = Date.now(), d = NP.buildDaily(S, mode, now, (now ^ Math.floor(Math.random() * 1e9)) >>> 0);
     var ses = { sid: NP.uid(), kind: 'daily', dmode: mode, created: now, date: dayKey(now), rounds: d.rounds, reasons: d.reasons, estMin: d.estMin, placement: d.placement,
-      items: d.items.map(function (x) { return { id: x.id, seed: x.seed, s: x.s, r: x.r, slot: x.slot, sel: null, done: false, hint: false, mid: null }; }), cur: 0, intro: {}, elapsed: 0, finished: null };
+      items: d.items.map(function (x) { return { id: x.id, seed: x.seed, s: x.s, r: x.r, slot: x.slot, typed: !!x.typed, sel: null, done: false, hint: false, mid: null }; }), cur: 0, intro: {}, elapsed: 0, finished: null };
     var cur = S.sessions.daily;
     var doit = function () { S.sessions.daily = ses; save(); go('daily'); };
     if (cur && !cur.finished && cur.items.some(function (x) { return x.done; })) ask(esc(t(L('Аяқталмаған раунд жабылады. Берілген жауаптар журналда сақталады. Жаңасын бастау керек пе?', 'Незавершённая тренировка закроется. Уже данные ответы сохранены в журнале. Начать новую?'))), t(L('Иә, бастау', 'Да, начать')), doit);
@@ -667,7 +680,7 @@
   var finishDaily = function () {
     var ses = S.sessions.daily; if (!ses) return;
     var before = NP.dailyStats(S, Date.now()).badges.filter(function (b) { return b.got; }).map(function (b) { return b.id; });
-    var items = ses.items.map(function (x) { var inst = NP.build(x.id, x.seed); return { id: x.id, seed: x.seed, s: inst.s, t: inst.t, k: inst.k, sel: x.sel, ans: inst.ans, ok: x.sel === inst.ans, sec: 'all', slot: x.slot, r: x.r }; });
+    var items = ses.items.map(function (x) { var inst = NP.build(x.id, x.seed); return { id: x.id, seed: x.seed, s: inst.s, t: inst.t, k: inst.k, sel: x.sel, typed: x.typedText || null, ans: inst.ans, ok: x.sel === inst.ans, sec: 'all', slot: x.slot, r: x.r }; });
     var c = items.filter(function (x) { return x.ok; }).length, aid = NP.uid();
     var a = { aid: aid, kind: 'daily', sub: ses.dmode, title: DTITLE, mode: 'study', ts: Date.now(), dur: ses.elapsed, sections: [{ key: 'all', c: c, n: items.length }], items: items, c: c, n: items.length, flags: {}, rounds: ses.rounds.map(function (r) { return { title: r.title, kind: r.kind }; }), enPlaced: ses.enPlaced || null, enLevel: S.en ? S.en.level : null };
     S.attempts.unshift(a);
@@ -705,10 +718,17 @@
       case 'd-start': startDaily(v); return true;
       case 'd-begin': ses.intro[it.r] = true; save(); render(); window.scrollTo(0, 0); return true;
       case 'd-pick': if (!it.done) { it.sel = +v; save(); render(); } return true;
-      case 'd-hint': it.hint = true; save(); render(); return true;
+      case 'd-hint': var ti = document.getElementById('d-typed'); if (ti) it.typedText = ti.value; it.hint = true; save(); render(); return true;
+      case 'd-showopts': it.typed = false; it.typedText = null; it.badInput = false; it.helped = true; save(); render(); return true;
       case 'd-check':
+        var inst = NP.build(it.id, it.seed), tpl = NP.byId[it.id], qlg = inst.fixed === 'kk' || inst.fixed === 'ru' ? inst.fixed : S.ql;
+        if (!it.done && it.typed && NP.typedOK(inst, qlg)) {
+          var inp = document.getElementById('d-typed'), txt = inp ? inp.value.trim() : '', mt = NP.typedMatch(inst, qlg, txt);
+          it.typedText = txt;
+          if (mt === null) { it.badInput = true; save(); render(); var e2 = document.getElementById('d-typed'); if (e2) e2.focus(); return true; }
+          it.badInput = false; it.sel = mt;
+        }
         if (it.done || it.sel === null || it.sel === undefined) return true;
-        var inst = NP.build(it.id, it.seed), tpl = NP.byId[it.id];
         it.done = true; it.ok = record(it, inst, it.sel, 'daily', DTITLE); it.mid = record.lastMid || null;
         var rd = ses.rounds[it.r];
         if (tpl.t === 'enmini') {
@@ -771,7 +791,7 @@
     var ses = curSlot ? S.sessions[curSlot] : null;
     switch (a) {
       case 'ui': S.ui = v; save(); render(); break;
-      case 'd-start': case 'd-begin': case 'd-pick': case 'd-hint': case 'd-check': case 'd-reason': case 'd-similar': case 'd-next': case 'd-prev': dAct(a, v); break;
+      case 'd-start': case 'd-begin': case 'd-pick': case 'd-hint': case 'd-showopts': case 'd-check': case 'd-reason': case 'd-similar': case 'd-next': case 'd-prev': dAct(a, v); break;
       case 'ql': S.ql = v; save(); render(); break;
       case 'modal-no': modal = null; render(); break;
       case 'modal-yes': var f = modal && modal.onYes; modal = null; if (f) f(); else render(); break;
@@ -867,6 +887,7 @@
     else if (a === 'onlywrong') { window.__onlyWrong = el.checked; render(); }
   });
   document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Enter' && ev.target && ev.target.id === 'd-typed') { ev.preventDefault(); dAct('d-check'); return; }
     if (route().indexOf('run-') !== 0 || modal) return;
     var tag = (ev.target.tagName || '').toLowerCase(); if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
     if (ev.key === 'ArrowRight') { ev.preventDefault(); move(1); }

@@ -154,3 +154,32 @@ NP._assemble = function (tpl, g, r) {
   });
   return inst;
 };
+
+/* Числовое значение ответа ("12 500 ₸", "2,5 см²", "−3", "3/4", "2 1/4", "x = 4") или null, если ответ не число */
+NP.numVal = function (x) {
+  var s = NP.plain(String(x)).replace(/[  ]/g, ' ').replace(/[−–]/g, '-').replace(/^\s*[a-zA-Z]\s*=\s*/, '').trim();
+  var m = s.match(/^(-?)\s*(\d{1,3}(?: \d{3})+|\d+)(?:[.,](\d+)|\s+(\d+)\s*\/\s*(\d+)|\s*\/\s*(\d+))?\s*([^\d]*)$/);
+  if (!m || /[\/=<>]/.test(m[7])) return null;
+  var v = +m[2].replace(/ /g, '');
+  if (m[3]) v = +(m[2].replace(/ /g, '') + '.' + m[3]);
+  else if (m[5]) { if (+m[5] === 0) return null; v += +m[4] / +m[5]; }
+  else if (m[6]) { if (+m[6] === 0) return null; v /= +m[6]; }
+  return { v: m[1] ? -v : v, unit: m[7].trim() };
+};
+NP.numEq = function (a, b) { return Math.abs(a - b) < 1e-9 * Math.max(1, Math.abs(a)); };
+/* Можно ли спросить это задание без вариантов: ответ — число, и ни один неверный вариант не равен ему численно */
+NP.typedOK = function (inst, lg) {
+  if (inst.type !== 'mc') return false;
+  var o = inst.L[lg].opts, a = NP.numVal(o[inst.ans]);
+  if (!a) return false;
+  for (var i = 0; i < 4; i++) { if (i === inst.ans) continue; var w = NP.numVal(o[i]); if (w && NP.numEq(w.v, a.v)) return false; }
+  return true;
+};
+/* Сопоставить введённый ответ с вариантами: индекс совпавшего варианта или −1 */
+NP.typedMatch = function (inst, lg, text) {
+  var u = NP.numVal(text); if (!u) return null;
+  var o = inst.L[lg].opts;
+  if (NP.numEq(NP.numVal(o[inst.ans]).v, u.v)) return inst.ans;
+  for (var i = 0; i < 4; i++) { var w = NP.numVal(o[i]); if (w && NP.numEq(w.v, u.v)) return i; }
+  return -1;
+};
