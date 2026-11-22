@@ -261,3 +261,10 @@ svg .gline { stroke: var(--sc, var(--accent)); } svg .gdot { fill: var(--sc, var
 .tin input { flex: 1; min-width: 0; font: inherit; font-size: 1.35rem; font-weight: 700; padding: 12px 14px; border: 2px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--ink); }
 .tin input:focus { outline: none; border-color: var(--accent); }
 .tin .unit { font-size: 1.15rem; font-weight: 600; color: var(--muted); }
+.btimer { margin: 6px 0 12px; padding: 10px 12px; border-radius: 14px; background: var(--accent-weak); }
+.btimer .bt-row { display: flex; align-items: baseline; gap: 6px; } .btimer .bt-t { font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+.btimer .bt-bar { height: 8px; border-radius: 6px; background: var(--surface); overflow: hidden; margin: 6px 0 4px; }
+.btimer .bt-bar i { display: block; height: 100%; background: var(--accent); border-radius: 6px; transition: width 1s linear; }
+.btimer.over { background: var(--gold-weak); } .btimer.over .bt-bar i { background: var(--gold); }
+.btimer .bt-msg { margin: 0; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .btimer .bt-bar i { transition: none; } }

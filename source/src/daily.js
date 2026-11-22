@@ -26,8 +26,8 @@
   NP.estSec = function (t) {
     if (t.est) return t.est + 12;
     var base;
-    if (t.s === 'math') base = LOGIC_T.indexOf(t.t) >= 0 ? [0, 50, 80, 100][t.d] : [0, 40, 70, 95][t.d];
-    else if (t.s === 'qc') base = [0, 30, 40, 55][t.d];
+    if (t.s === 'math') base = LOGIC_T.indexOf(t.t) >= 0 ? [0, 50, 80, 100, 130][t.d] : [0, 40, 70, 95, 130][t.d];
+    else if (t.s === 'qc') base = [0, 30, 40, 55, 70][t.d];
     else if (t.s === 'en') base = [0, 35, 45, 55][t.lv || t.d];
     else if (t.s === 'sci') base = 55; else base = 45;
     return base + 12;
@@ -81,7 +81,7 @@
     if (!ls) s += 1.2; else { var d = (A.now - ls) / DAY; s += d < 1 ? -1.6 : Math.min(d, 10) * 0.15; }
     var ta = A.tAcc[t.t]; if (ta && ta.n >= 3 && ta.c / ta.n < 0.6) s += 0.8;
     if (opt.review && A.due[skillKey(t.s, t.k)]) s += 5;
-    if (opt.prefer && opt.prefer(t)) s += 3;
+    if (opt.prefer && opt.prefer(t)) s += 6;
     return s;
   };
   var pick = function (pool, A, r, opt, used) {
@@ -95,6 +95,9 @@
     used.ids[best.id] = 1; used.topics[best.t] = 1; used.skills[best.k] = 1;
     return best;
   };
+  /* «Задачу дня» решают без вариантов, поэтому предпочитаем шаблоны с числовым ответом */
+  var TYPE_OK = {};
+  var typeable = function (t) { if (TYPE_OK[t.id] === undefined) { var ok = 0; for (var sd = 1; sd <= 5; sd++) { var i = NP.build(t.id, sd * 7919); if (i && !i.bad && NP.typedOK && NP.typedOK(i, 'kk')) ok++; } TYPE_OK[t.id] = ok >= 4; } return TYPE_OK[t.id]; };
   var item = function (t, r, ri, slot, typed) { var o = { id: t.id, seed: r.int(1, 2e9), s: t.s, r: ri, slot: slot }; if (typed) o.typed = true; return o; };
   var nm = function (o, lg) { return o[lg]; };
   var tName = function (t) { return NP.TOPICS[t] ? NP.TOPICS[t].name : L(t, t); };
@@ -114,14 +117,14 @@
     /* 1. Математикалық спринт */
     var cm = A.comfort(['math']), stretch = cm.n >= 6 && cm.c / cm.n >= 0.75, easier = cm.n >= 6 && cm.c / cm.n < 0.45;
     var used = { ids: {}, topics: {}, skills: {} }, mlist = [], why = [];
-    mlist.push({ t: pick(P.math, A, r, { d: stretch ? [2] : [1] }, used), slot: 'warm' });
+    mlist.push({ t: pick(P.math, A, r, { d: stretch && !short ? [2] : [1] }, used), slot: 'warm' });
     var placeDay = !(S.en && S.en.placed) && !short;
     var rv = pick(P.math, A, r, { d: [2], review: true }, used) || pick(P.math, A, r, { d: [3], review: true }, used);
     if (rv) { mlist.push({ t: rv, slot: 'review' }); why.push(reviewNote(rv)); }
     else mlist.push({ t: pick(P.math, A, r, { d: [2] }, used), slot: 'main' });
     if (!short) {
-      if (!placeDay) mlist.push({ t: pick(P.math, A, r, { d: stretch ? [3] : [2] }, used), slot: 'hard' });
-      mlist.push({ t: pick(P.math, A, r, { d: [3], prefer: stretch ? function (t) { return t.plus; } : null }, used), slot: 'boss', typed: true });
+      if (!placeDay) mlist.push({ t: pick(P.math, A, r, { d: stretch ? [3, 4] : [2, 3] }, used), slot: 'hard' });
+      mlist.push({ t: (stretch && pick(P.math, A, r, { d: [4], prefer: typeable }, used)) || pick(P.math, A, r, { d: [3], prefer: function (t) { return t.plus && typeable(t); } }, used), slot: 'boss', typed: true });
       why.push(L('«Күннің есебінде» жауапты нұсқасыз, өзің жазасың — Aiplus-тағыдай.', 'В «задаче дня» ответ нужно вписать самому, без вариантов — как в Aiplus.'));
     }
     if (stretch) why.push(L('Соңғы математика тапсырмаларының ' + Math.round(cm.c / cm.n * 100) + '%-ы дұрыс — бүгін бір тапсырма қиынырақ.', 'Последние задания по математике решены на ' + Math.round(cm.c / cm.n * 100) + '% — сегодня одно задание сложнее.'));
@@ -139,7 +142,7 @@
     var lrv = pick(P.logic, A, r, { d: [2, 3], review: true }, used);
     if (lrv) { llist.push({ t: lrv, slot: 'review' }); lwhy.push(reviewNote(lrv)); }
     else llist.push({ t: pick(short ? qcOnly : P.logic, A, r, { d: [2] }, used), slot: 'main' });
-    if (!short && !placeDay) llist.push({ t: pick(r.f() < 0.65 ? puzzles : qcOnly, A, r, { d: [3] }, used) || pick(P.logic, A, r, { d: [3] }, used), slot: 'boss' });
+    if (!short && !placeDay) llist.push({ t: pick(r.f() < 0.65 ? puzzles : qcOnly, A, r, { d: stretch ? [3, 4] : [3] }, used) || pick(P.logic, A, r, { d: [3] }, used), slot: 'boss' });
     addRound({ key: 'logic', kind: 'logic', title: L('Логикалық квест', 'Логический квест'), sub: L('Жұмбақ бөлмесі: салыстыру, заңдылық, шарт', 'Комната головоломок: сравнение, закономерность, условие'), why: lwhy }, llist.filter(function (x) { return x.t; }));
 
     /* 3. English mini-round */

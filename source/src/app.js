@@ -324,7 +324,7 @@
       }).join('') + '</details>';
     /* вопрос */
     var note = inst.fixed === 'kk' ? TX.fixedKk : inst.fixed === 'ru' ? TX.fixedRu : inst.fixed === 'en' ? TX.fixedEn : null;
-    h += '<article class="qcard"><div class="qmeta"><span class="pill">' + esc(t(NP.SUBJ[inst.s])) + '</span><span class="pill">' + esc(t(NP.TOPICS[inst.t].name)) + '</span><span class="pill soft">' + esc(t(NP.SKILL[inst.k])) + '</span><span class="pill soft">' + esc(t(L('Қиындық', 'Сложность'))) + ': ' + inst.d + '/3</span><span class="muted sm">' + esc(t(TX.author)) + '</span></div>' +
+    h += '<article class="qcard"><div class="qmeta"><span class="pill">' + esc(t(NP.SUBJ[inst.s])) + '</span><span class="pill">' + esc(t(NP.TOPICS[inst.t].name)) + '</span><span class="pill soft">' + esc(t(NP.SKILL[inst.k])) + '</span><span class="pill soft">' + esc(t(L('Қиындық', 'Сложность'))) + ': ' + inst.d + '/4' + (inst.d === 4 ? ' · ' + esc(t(L('өте қиын', 'очень сложно'))) : '') + '</span><span class="muted sm">' + esc(t(TX.author)) + '</span></div>' +
       (note ? '<p class="note sm">' + esc(t(note)) + '</p>' : '') +
       (inst.type === 'qc' && i === sec.from ? '<p class="note sm">' + esc(lg === 'kk' ? 'А бағаны мен В бағанындағы шамаларды салыстырыңыз. A — А үлкен, B — В үлкен, C — тең, D — ақпарат жеткіліксіз.' : 'Сравните величины в колонках А и В. A — больше А, B — больше В, C — равны, D — недостаточно информации.') + '</p>' : '') +
       '<div class="stem" lang="' + (inst.fixed || lg) + '">' + Lx.stem + '</div>';
@@ -624,6 +624,16 @@
     return h;
   };
   var REASON_ORDER = ['topic', 'read', 'calc', 'time', 'guess', 'other'];
+  /* Мягкий таймер «задачи дня»: ориентир по времени, без штрафа. Время идёт, только пока задача открыта. */
+  var bossTimed = function (ses, it) { return it && it.slot === 'boss' && ses.rounds[it.r] && ses.rounds[it.r].key === 'math'; };
+  var bossLimit = function (it) { var tp = NP.byId[it.id]; return tp && tp.d >= 4 ? 240 : 180; };
+  var mmss = function (sec) { sec = Math.max(0, Math.round(sec)); return Math.floor(sec / 60) + ':' + ('0' + sec % 60).slice(-2); };
+  var bossTimerInner = function (it) {
+    var lim = bossLimit(it), sp = it.spent || 0, over = sp > lim, pct = Math.min(100, sp / lim * 100);
+    return '<div class="bt-row"><span class="bt-ic" aria-hidden="true">⏱</span><b class="bt-t">' + mmss(sp) + '</b><span class="muted"> / ' + mmss(lim) + '</span></div>' +
+      '<div class="bt-bar"><i style="width:' + pct.toFixed(1) + '%"></i></div>' +
+      '<p class="sm bt-msg">' + esc(t(over ? L('Ориентир уақыты өтті — бұл айып емес. Асықпай шешіп бітір: емтиханда мұндай есепке шамамен ' + Math.round(lim / 60) + ' минут болады.', 'Ориентир по времени прошёл — это не штраф. Спокойно дореши: на экзамене на такую задачу будет примерно ' + Math.round(lim / 60) + ' мин.') : L('Жұмсақ таймер: емтихандағыдай қарқынды сезіну үшін. Уақыт бітсе де, жауап беруге болады.', 'Мягкий таймер: чтобы почувствовать темп экзамена. Отвечать можно и после окончания времени.'))) + '</p>';
+  };
   var dQuestion = function (ses) {
     var i = ses.cur, it = ses.items[i], inst = NP.build(it.id, it.seed), rd = ses.rounds[it.r];
     var lg = inst.fixed === 'kk' || inst.fixed === 'ru' ? inst.fixed : S.ql, Lx = inst.L[lg], Lh = inst.L[S.ql];
@@ -639,6 +649,7 @@
         var c = 'opt' + (it.sel === k ? ' sel' : ''); if (it.done) { if (k === inst.ans) c += ' right'; else if (k === it.sel) c += ' wrongpick'; }
         return '<button type="button" class="' + c + '" data-act="d-pick" data-v="' + k + '" role="radio" aria-checked="' + (it.sel === k) + '"' + (it.done ? ' disabled' : '') + '><span class="lt">' + optLetter[k] + '</span><span class="ot" lang="' + (inst.fixed || lg) + '">' + o + '</span></button>';
       }).join('') + '</div>');
+    if (!it.done && bossTimed(ses, it)) h += '<div class="btimer' + ((it.spent || 0) > bossLimit(it) ? ' over' : '') + '" id="btimer" role="timer" aria-live="off">' + bossTimerInner(it) + '</div>';
     if (!it.done && typed) {
       h += '<div class="typed"><p class="note sm">' + esc(t(L('Нұсқа жоқ: есепті шығарып, жауапты өзің жаз.', 'Вариантов нет: реши задачу и впиши ответ сам.'))) + ' ' + esc(t(L('Бөлшекті 3/4 немесе 2 1/4 түрінде, ондық бөлшекті 2,5 түрінде жаз.', 'Дробь пиши как 3/4 или 2 1/4, десятичную — как 2,5.'))) + '</p>' +
         '<label class="tin"><input id="d-typed" type="text" inputmode="text" autocomplete="off" enterkeyhint="done" value="' + esc(it.typedText || '') + '" aria-label="' + esc(t(L('Жауап', 'Ответ'))) + '">' + (au.unit ? '<span class="unit">' + esc(au.unit) + '</span>' : '') + '</label>' +
@@ -652,6 +663,7 @@
       var ok = it.sel === inst.ans;
       h += '<div class="fb ' + (ok ? 'good' : 'badc') + '"><div class="fb-h">' + esc(t(ok ? L('Дұрыс!', 'Верно!') : L('Қате, бірақ бұл — үйренудің бөлігі', 'Неверно, но это часть учёбы'))) + '</div>';
       if (it.typedText) h += '<p><b>' + esc(t(TX.yours)) + ':</b> ' + esc(it.typedText) + '</p>';
+      if (bossTimed(ses, it) && it.secs != null) { var bl = bossLimit(it); h += '<p class="bt-res"><b>⏱ ' + mmss(it.secs) + '</b> / ' + mmss(bl) + ' — ' + esc(t(it.secs <= bl ? L('ориентирге сыйдың', 'уложился в ориентир') : L('ориентирден ' + mmss(it.secs - bl) + ' артық. Келесі жолы алдымен шешу жоспарын құр, содан кейін есепте.', 'на ' + mmss(it.secs - bl) + ' дольше ориентира. В следующий раз сначала составь план решения, потом считай.'))) + '</p>'; }
       if (!ok) h += '<p><b>' + esc(t(TX.answer)) + ':</b> ' + optLetter[inst.ans] + ') ' + Lx.opts[inst.ans] + '</p>';
       h += '<p><b>' + esc(t(TX.expl)) + ':</b> ' + Lh.e + '</p>';
       if (!ok && it.sel >= 0 && Lh.whys[it.sel]) h += '<p><b>' + esc(t(L('Мүмкін қате', 'Возможная ошибка'))) + ':</b> ' + Lh.whys[it.sel] + '</p>';
@@ -682,7 +694,7 @@
   var finishDaily = function () {
     var ses = S.sessions.daily; if (!ses) return;
     var before = NP.dailyStats(S, Date.now()).badges.filter(function (b) { return b.got; }).map(function (b) { return b.id; });
-    var items = ses.items.map(function (x) { var inst = NP.build(x.id, x.seed); return { id: x.id, seed: x.seed, s: inst.s, t: inst.t, k: inst.k, sel: x.sel, typed: x.typedText || null, ans: inst.ans, ok: x.sel === inst.ans, sec: 'all', slot: x.slot, r: x.r }; });
+    var items = ses.items.map(function (x) { var inst = NP.build(x.id, x.seed); return { id: x.id, seed: x.seed, s: inst.s, t: inst.t, k: inst.k, sel: x.sel, typed: x.typedText || null, secs: x.secs != null ? x.secs : null, ans: inst.ans, ok: x.sel === inst.ans, sec: 'all', slot: x.slot, r: x.r }; });
     var c = items.filter(function (x) { return x.ok; }).length, aid = NP.uid();
     var a = { aid: aid, kind: 'daily', sub: ses.dmode, title: DTITLE, mode: 'study', ts: Date.now(), dur: ses.elapsed, sections: [{ key: 'all', c: c, n: items.length }], items: items, c: c, n: items.length, flags: {}, rounds: ses.rounds.map(function (r) { return { title: r.title, kind: r.kind }; }), enPlaced: ses.enPlaced || null, enLevel: S.en ? S.en.level : null };
     S.attempts.unshift(a);
@@ -695,6 +707,8 @@
     var h = h1(esc(t(L('Раунд аяқталды!', 'Тренировка завершена!'))), esc(t(L('Ең бастысы — күн сайын аздап. Нәтиже тек өзіңмен салыстырылады.', 'Главное — понемногу каждый день. Результат сравнивается только с тобой.'))));
     h += '<div class="grid3">' + card('<div class="k">' + esc(t(TX.c)) + '</div><div class="big">' + a.c + ' / ' + a.n + '</div>', 'stat') + card('<div class="k">' + esc(t(L('Серия', 'Серия'))) + '</div><div class="big">' + st.streak + '</div><div class="muted">' + esc(t(L('күн қатарынан', 'дней подряд'))) + '</div>', 'stat') + card('<div class="k">' + esc(t(L('Уақыт', 'Время'))) + '</div><div class="big">' + Math.max(1, Math.round((a.dur || 0) / 60000)) + ' ' + esc(t(TX.min)) + '</div><div class="muted">' + esc(t(L('тек ақпарат үшін', 'просто для информации'))) + '</div>', 'stat') + '</div>';
     h += card('<h2>' + esc(t(L('Раундтар бойынша', 'По раундам'))) + '</h2>' + NP.table([esc(t(L('Раунд', 'Раунд'))), esc(t(TX.c))], (a.rounds || []).map(function (r, ri) { var xs = a.items.filter(function (x) { return x.r === ri; }); return [esc(t(r.title)), xs.filter(function (x) { return x.ok; }).length + ' / ' + xs.length]; })));
+    var bx = a.items.filter(function (x) { return x.slot === 'boss' && x.secs != null; })[0];
+    if (bx) { var blim = (NP.byId[bx.id] && NP.byId[bx.id].d >= 4) ? 240 : 180; h += card('<h2>' + esc(t(NP.SLOT.boss)) + '</h2><p>' + (bx.ok ? '✓ ' : '✗ ') + '<b>' + mmss(bx.secs) + '</b> / ' + mmss(blim) + ' — ' + esc(t(bx.secs <= blim ? L('емтихан қарқынына сай', 'в темпе экзамена') : L('емтихан қарқынынан баяу; бұл қалыпты, жылдамдық жаттығумен келеді', 'медленнее темпа экзамена; это нормально, скорость приходит с практикой'))) + '</p>'); }
     if (a.enPlaced) h += card('<h2>English</h2><p>' + esc(t(L('Сенің бастапқы деңгейің: ' + a.enPlaced + ' (шамамен ' + NP.CEFR[a.enPlaced] + '). Бұл 6 тапсырмаға негізделген алғашқы баға — келесі раундтарда ол нақтыланады.', 'Твой стартовый уровень: ' + a.enPlaced + ' (примерно ' + NP.CEFR[a.enPlaced] + '). Это первая оценка по 6 заданиям — дальше она уточнится.'))) + '</p>');
     var wr = {}; a.items.forEach(function (x) { if (!x.ok) wr[x.s + ':' + x.k] = x; });
     var wk = Object.keys(wr);
@@ -708,7 +722,13 @@
     if (dTimer) return; dLast = Date.now();
     dTimer = setInterval(function () {
       var ses = S.sessions.daily; if (!ses || route() !== 'daily') { stopDTimer(); return; }
-      var now = Date.now(); ses.elapsed = (ses.elapsed || 0) + Math.min(now - dLast, 5000); dLast = now;
+      var now = Date.now(), dt = Math.min(now - dLast, 5000); ses.elapsed = (ses.elapsed || 0) + dt; dLast = now;
+      var bi = ses.items[ses.cur];
+      if (bi && !bi.done && ses.intro[bi.r] && bossTimed(ses, bi) && !modal && !document.hidden) {
+        var was = (bi.spent || 0) > bossLimit(bi); bi.spent = (bi.spent || 0) + dt / 1000;
+        var el = document.getElementById('btimer');
+        if (el) { if (was !== (bi.spent > bossLimit(bi))) { el.className = 'btimer over'; el.innerHTML = bossTimerInner(bi); } else { el.querySelector('.bt-t').textContent = mmss(bi.spent); el.querySelector('.bt-bar i').style.width = Math.min(100, bi.spent / bossLimit(bi) * 100).toFixed(1) + '%'; } }
+      }
       if (Math.floor(now / 1000) % 10 === 0) save();
     }, 1000);
   };
@@ -732,6 +752,7 @@
         }
         if (it.done || it.sel === null || it.sel === undefined) return true;
         it.done = true; it.ok = record(it, inst, it.sel, 'daily', DTITLE); it.mid = record.lastMid || null;
+        if (bossTimed(ses, it)) it.secs = Math.round(it.spent || 0);
         var rd = ses.rounds[it.r];
         if (tpl.t === 'enmini') {
           if (rd.place) { var pl = ses.items.filter(function (x) { return x.r === it.r; }); if (pl.every(function (x) { return x.done; })) ses.enPlaced = NP.enPlace(S, pl.map(function (x) { return { id: x.id, ok: x.ok }; })); }

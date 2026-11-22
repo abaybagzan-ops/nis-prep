@@ -33,9 +33,16 @@
   NP.makeExam = function (day, mode, seed, seen) {
     var r = NP.rng(seed || (Date.now() >>> 0)), items = [];
     if (day === 1) {
-      var m = r.shuffle(pool('math')).slice(0, 40).sort(function (a, b) { return a.d - b.d; });
-      var q = r.shuffle(pool('qc')).slice(0, 60).sort(function (a, b) { return a.d - b.d; });
-      var s = r.shuffle(pool('sci')).slice(0, 20);
+      /* Полный тест собран «на максимум»: только задания уровня 3–4, лёгкие добираются лишь если сложных не хватает */
+      var hardest = function (subj, n, quota) {
+        var out = [], used = {};
+        quota.forEach(function (qd) { r.shuffle(pool(subj).filter(function (t) { return t.d === qd[0] && !used[t.id]; })).slice(0, qd[1]).forEach(function (t) { used[t.id] = 1; out.push(t); }); });
+        [4, 3, 2, 1].forEach(function (d) { if (out.length < n) r.shuffle(pool(subj).filter(function (t) { return t.d === d && !used[t.id]; })).slice(0, n - out.length).forEach(function (t) { used[t.id] = 1; out.push(t); }); });
+        return out.slice(0, n).sort(function (a, b) { return a.d - b.d; });
+      };
+      var m = hardest('math', 40, [[4, 16], [3, 24]]);
+      var q = hardest('qc', 60, [[4, 13], [3, 22]]);
+      var s = r.shuffle(hardest('sci', 20, [[3, 8], [2, 12]]));
       [[m, 'math'], [q, 'qc'], [s, 'sci']].forEach(function (p) { p[0].forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: p[1], s: t.s }); }); });
     } else {
       ['kk', 'ru', 'en'].forEach(function (lg) { pickPassages(lg, 5, r, seen).forEach(function (g) { g.forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'lang', s: t.s }); }); }); });

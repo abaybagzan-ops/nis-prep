@@ -46,6 +46,7 @@
     'lang.main': L('Негізгі ой', 'Основная мысль'), 'lang.detail': L('Нақты ақпаратты табу', 'Поиск информации'), 'lang.vocab': L('Сөздің мәтіндегі мағынасы', 'Значение слова в контексте'), 'lang.infer': L('Қорытынды жасау', 'Вывод из текста'), 'lang.purpose': L('Мәтіннің мақсаты', 'Цель текста'), 'lang.cond': L('Шарттарды біріктіру', 'Совмещение условий'), 'lang.notsaid': L('Мәтінде не жоқ', 'Чего нет в тексте')
   };
 
+  for (var kx in NP.SKILL_X || {}) NP.SKILL[kx] = NP.SKILL_X[kx];
   var Tp = function (id, s, kk, ru, lesson) { NP.TOPICS[id] = { id: id, s: s, name: L(kk, ru), lesson: lesson }; NP.TOPIC_ORDER.push(id); };
   NP.TOPICS = {}; NP.TOPIC_ORDER = [];
   var les = function (kkTh, ruTh, kkEx, ruEx, kkTr, ruTr) { return { kk: { th: kkTh, ex: kkEx, tr: kkTr }, ru: { th: ruTh, ex: ruEx, tr: ruTr } }; };
