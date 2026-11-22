@@ -186,7 +186,17 @@
       addRound({ key: 'x-' + subj, kind: subj, title: xtitle, sub: xsub, why: xwhy }, xl);
     }
 
-    var est = items.reduce(function (s, it) { return s + NP.estSec(NP.byId[it.id]); }, 0);
+    var estOf = function () { return items.reduce(function (s, it) { return s + NP.estSec(NP.byId[it.id]); }, 0); };
+    /* Обычная тренировка — около 10–15 минут. Если трудные задания её удлинили — убираем второе задание
+       дополнительного раунда (самый низкий приоритет); математику, логику и повторение ошибок не трогаем. */
+    if (!short && !placement) {
+      var cut = [function (it) { return it.slot === 'extra' && rounds[it.r].n > 1; }];
+      for (var ci = 0; ci < cut.length && estOf() > 15.49 * 60; ci++) {
+        var ix = -1; items.forEach(function (it, j) { if (ix < 0 && cut[ci](it)) ix = j; });
+        if (ix >= 0) { rounds[items[ix].r].n--; items.splice(ix, 1); }
+      }
+    }
+    var est = estOf();
     return { rounds: rounds, items: items, reasons: reasons, estMin: Math.round(est / 60), placement: placement };
   };
 

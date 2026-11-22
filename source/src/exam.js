@@ -23,7 +23,14 @@
     return o;
   };
 
-  NP.makeExam = function (day, mode, seed) {
+  /* Тексты одного языка, сгруппированные по passage; выбираем n штук: сначала ещё не виденные, среди равных — усиленные */
+  var pickPassages = function (lg, n, r, seen) {
+    var ps = {}; pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { (ps[t.pass] = ps[t.pass] || []).push(t); });
+    var keys = Object.keys(ps).map(function (k) { return { k: k, sc: ((seen && seen[k]) || 0) * 10 - (ps[k][0].plus ? 1 : 0) + r.f() }; });
+    keys.sort(function (a, b) { return a.sc - b.sc; });
+    return keys.slice(0, n).map(function (x) { return ps[x.k]; });
+  };
+  NP.makeExam = function (day, mode, seed, seen) {
     var r = NP.rng(seed || (Date.now() >>> 0)), items = [];
     if (day === 1) {
       var m = r.shuffle(pool('math')).slice(0, 40).sort(function (a, b) { return a.d - b.d; });
@@ -31,21 +38,19 @@
       var s = r.shuffle(pool('sci')).slice(0, 20);
       [[m, 'math'], [q, 'qc'], [s, 'sci']].forEach(function (p) { p[0].forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: p[1], s: t.s }); }); });
     } else {
-      ['kk', 'ru', 'en'].forEach(function (lg) { pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'lang', s: t.s }); }); });
+      ['kk', 'ru', 'en'].forEach(function (lg) { pickPassages(lg, 5, r, seen).forEach(function (g) { g.forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'lang', s: t.s }); }); }); });
     }
     var title = day === 1 ? L('Толық сынақ: 1-күн', 'Полный тест: 1-й день') : L('Толық сынақ: 2-күн', 'Полный тест: 2-й день');
     return base('exam' + day, 'day' + day, title, mode, items, mkSections(NP.FORMAT[day]), { day: day, timed: mode === 'exam' });
   };
 
   /* Диагностика: по направлению; задания распределены по темам, чтобы видеть навыки */
-  NP.makeDiag = function (sub, seed) {
+  NP.makeDiag = function (sub, seed, seen) {
     var r = NP.rng(seed || (Date.now() >>> 0)), items = [];
     var per = { math: 2, qc: 3, sci: 2 }[sub];
     if (sub === 'lang') {
       ['kk', 'ru', 'en'].forEach(function (lg) {
-        var ps = {}; pool(lg).filter(function (t) { return t.pass; }).forEach(function (t) { (ps[t.pass] = ps[t.pass] || []).push(t); });
-        var keys = Object.keys(ps), pk = keys[r.int(0, keys.length - 1)];
-        ps[pk].forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'all', s: t.s }); });
+        pickPassages(lg, 1, r, seen)[0].forEach(function (t) { items.push({ id: t.id, seed: r.int(1, 2e9), sec: 'all', s: t.s }); });
       });
     } else {
       NP.TOPIC_ORDER.filter(function (tp) { return NP.TOPICS[tp].s === sub; }).forEach(function (tp) {

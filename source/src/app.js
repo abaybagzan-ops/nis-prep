@@ -93,6 +93,8 @@
     return ok;
   };
 
+  /* Сколько раз ученик уже видел каждый текст для чтения (по журналу ответов) — чтобы тесты не повторяли тексты */
+  var seenPass = function () { var m = {}; S.log.forEach(function (e) { var tp = NP.byId[e.id]; if (tp && tp.pass) m[tp.pass] = (m[tp.pass] || 0) + 0.25; }); return m; };
   /* ---------------- Маршрутизация ---------------- */
   var route = function () { var h = (location.hash || '#home').slice(1); return h || 'home'; };
   var go = function (h) { if (location.hash === '#' + h) render(); else location.hash = h; };
@@ -796,10 +798,10 @@
       case 'modal-no': modal = null; render(); break;
       case 'modal-yes': var f = modal && modal.onYes; modal = null; if (f) f(); else render(); break;
       case 'open-run': go('run-' + v); break;
-      case 'diag': startSession('test', NP.makeDiag(v)); break;
+      case 'diag': startSession('test', NP.makeDiag(v, undefined, seenPass())); break;
       case 'topic-test': startSession('test', NP.makeTopicTest(v)); break;
       case 'practice-topic': startSession('practice', NP.makePractice({ topic: v }, 0, 6, L('Жаттығу: ' + NP.TOPICS[v].name.kk, 'Практика: ' + NP.TOPICS[v].name.ru))); break;
-      case 'exam-start': var pr = v.split('-'); startSession('full', NP.makeExam(+pr[0], pr[1])); break;
+      case 'exam-start': var pr = v.split('-'); startSession('full', NP.makeExam(+pr[0], pr[1], undefined, seenPass())); break;
       case 'drop-full': ask(esc(t(L('Аяқталмаған сынақ нәтижесіз жабылады. Жалғастыру керек пе?', 'Незавершённый тест будет закрыт без результата. Продолжить?'))), t(L('Иә, жабу', 'Да, закрыть')), function () { S.sessions.full = null; save(); render(); }); break;
       case 'prev': move(-1); break;
       case 'next': move(1); break;
@@ -851,7 +853,7 @@
         f2.tk.moved = (f2.tk.moved || 0) + 1; nd.tasks.unshift(f2.tk); save(); render(); break;
       case 't-go':
         var f3 = findTask(v); if (!f3) break; var tk = f3.tk;
-        if (tk.kind === 'diag') startSession('test', NP.makeDiag(tk.sub));
+        if (tk.kind === 'diag') startSession('test', NP.makeDiag(tk.sub, undefined, seenPass()));
         else if (tk.kind === 'lesson') go('learn-' + tk.topic);
         else if (tk.kind === 'practice') startSession('practice', NP.makePractice({ topic: tk.topic }, 0, 6, L('Жаттығу: ' + NP.TOPICS[tk.topic].name.kk, 'Практика: ' + NP.TOPICS[tk.topic].name.ru)));
         else if (tk.kind === 'mistakes') { mf.st = 'open'; go('mistakes'); }
